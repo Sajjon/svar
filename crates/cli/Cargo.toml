@@ -1,0 +1,16 @@
+[package]
+name = "svar-cli"
+rust-version = "1.85.1"
+version = "0.1.0"
+edition = "2024"
+description = "POC binary for personal questions based encryption scheme useful cryptographic hierarchal deterministic key derivation."
+license = "MIT"
+documentation = "https://docs.rs/svar-cli"
+repository = "https://github.com/Sajjon/svar"
+
+[dependencies]
+# Internal dependencies
+svar-core.workspace = true
+
+# External dependencies
+aes-gcm.workspace = true

@@ -1,0 +1,36 @@
+[package]
+name = "svar-core"
+rust-version = "1.85.1"
+version = "0.1.0"
+edition = "2024"
+description = "POC library for personal questions based encryption scheme useful cryptographic hierarchal deterministic key derivation."
+license = "MIT"
+documentation = "https://docs.rs/svar-core"
+repository = "https://github.com/Sajjon/svar"
+
+[dependencies]
+aes-gcm.workspace = true
+bon.workspace = true
+derive_more.workspace = true
+dirs-next.workspace = true
+getset.workspace = true
+hex.workspace = true
+hkdf.workspace = true
+indexmap.workspace = true
+log.workspace = true
+rand.workspace = true
+ron.workspace = true
+secrecy.workspace = true
+serde_json.workspace = true
+serde_with = { version = "3.9", features = ["hex"] }
+serde.workspace = true
+sha2.workspace = true
+strum.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+pretty_assertions.workspace = true
+tempfile.workspace = true
+test-log.workspace = true
