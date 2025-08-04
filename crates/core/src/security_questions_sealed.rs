@@ -47,7 +47,7 @@ impl SecurityQuestionsSealed {
 
         let encryptions = encryption_keys
             .into_iter()
-            .map(|k| encryption_scheme.encrypt(secret_binary, &mut k.clone()))
+            .map(|encryption_key| encryption_scheme.encrypt(secret_binary, encryption_key))
             .map(|vec| Exactly60Bytes::try_from(vec).expect("Should have been 60 bytes"))
             .collect_vec();
 
@@ -73,7 +73,7 @@ impl SecurityQuestionsSealed {
             for encrypted in self.encryptions.iter() {
                 if let Ok(decrypted_bytes) = self
                     .encryption_scheme
-                    .decrypt(encrypted.bytes(), &mut decryption_key.clone())
+                    .decrypt(encrypted.bytes(), decryption_key.clone())
                 {
                     if let Ok(secret) = Secret::try_from(decrypted_bytes) {
                         return Ok(secret);

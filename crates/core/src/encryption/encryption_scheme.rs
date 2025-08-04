@@ -68,7 +68,7 @@ impl Default for EncryptionScheme {
 impl VersionedEncryption for EncryptionScheme {
     /// Encrypts `plaintext` using `encryption_key` using
     /// the `self` `EncryptionScheme`, returning the cipher text as Vec<u8>.
-    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: &mut EncryptionKey) -> Vec<u8> {
+    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8> {
         match self {
             EncryptionScheme::Version1(scheme) => scheme.encrypt(plaintext, encryption_key),
         }
@@ -80,7 +80,7 @@ impl VersionedEncryption for EncryptionScheme {
     fn decrypt(
         &self,
         cipher_text: impl AsRef<[u8]>,
-        decryption_key: &mut EncryptionKey,
+        decryption_key: EncryptionKey,
     ) -> Result<Vec<u8>> {
         match self {
             EncryptionScheme::Version1(scheme) => scheme.decrypt(cipher_text, decryption_key),
@@ -135,16 +135,13 @@ mod tests {
     #[test]
     fn encryption_roundtrip() {
         let sut = Sut::default();
-        let mut encryption_key = EncryptionKey::generate();
-        let mut decryption_key = encryption_key.clone();
+        let encryption_key = EncryptionKey::generate();
+        let decryption_key = encryption_key.clone();
         let msg = "open zesame";
         let msg_bytes: Vec<u8> = msg.bytes().collect();
 
-        let encrypted = sut.encrypt(&msg_bytes, &mut encryption_key);
-        assert_eq!(encryption_key.0, Exactly32Bytes::from(&[0; 32])); // assert zeroed out
-
-        let decrypted_bytes = sut.decrypt(encrypted, &mut decryption_key).unwrap();
-        assert_eq!(decryption_key.0, Exactly32Bytes::from(&[0; 32])); // assert zeroed out
+        let encrypted = sut.encrypt(&msg_bytes, encryption_key);
+        let decrypted_bytes = sut.decrypt(encrypted, decryption_key).unwrap();
 
         let decrypted = String::from_utf8(decrypted_bytes).unwrap();
         assert_eq!(msg, decrypted);
@@ -154,9 +151,9 @@ mod tests {
     fn decrypt_known() {
         let sut = Sut::default();
         let test = |encrypted_hex: &str, key_hex: &str, expected_plaintext: &str| {
-            let mut decryption_key = EncryptionKey::from_str(key_hex).unwrap();
+            let decryption_key = EncryptionKey::from_str(key_hex).unwrap();
             let encrypted = hex_decode(encrypted_hex).unwrap();
-            let decrypted = sut.decrypt(encrypted, &mut decryption_key).unwrap();
+            let decrypted = sut.decrypt(encrypted, decryption_key).unwrap();
             assert_eq!(hex::encode(decrypted), expected_plaintext);
         };
 
@@ -171,7 +168,7 @@ mod tests {
     fn decrypt_invalid_sealed_box_is_err() {
         let sut = Sut::default();
         assert_eq!(
-            sut.decrypt(Vec::new(), &mut EncryptionKey::sample()),
+            sut.decrypt(Vec::new(), EncryptionKey::sample()),
             Err(Error::InvalidAESBytesTooShort {
                 expected_at_least: AesGcmSealedBox::LOWER_BOUND_LEN,
                 found: 0

@@ -7,7 +7,7 @@ use aes_gcm::{
 
 /// AES GCM 256 encryption
 #[derive(Clone, Default, PartialEq, Eq, Hash, derive_more::Display, derive_more::Debug)]
-pub struct AesGcm256 {}
+pub struct AesGcm256;
 
 impl HasSampleValues for AesGcm256 {
     fn sample() -> Self {
@@ -66,12 +66,11 @@ impl VersionOfAlgorithm for AesGcm256 {
 
 impl VersionedEncryption for AesGcm256 {
     /// Zeroizes `encryption_key` after usage.
-    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: &mut EncryptionKey) -> Vec<u8> {
+    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8> {
         let sealed_box = Self::seal(
             plaintext,
             Key::<aes_gcm::Aes256Gcm>::from(encryption_key.clone()),
         );
-        encryption_key.zeroize();
         sealed_box.combined()
     }
 
@@ -79,14 +78,13 @@ impl VersionedEncryption for AesGcm256 {
     fn decrypt(
         &self,
         cipher_text: impl AsRef<[u8]>,
-        decryption_key: &mut EncryptionKey,
+        decryption_key: EncryptionKey,
     ) -> Result<Vec<u8>> {
         let sealed_box = AesGcmSealedBox::try_from(cipher_text.as_ref())?;
         let result = Self::open(
             sealed_box,
             Key::<aes_gcm::Aes256Gcm>::from(decryption_key.clone()),
         );
-        decryption_key.zeroize();
         result
     }
 }
