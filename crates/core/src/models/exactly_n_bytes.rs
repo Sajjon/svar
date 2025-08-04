@@ -44,8 +44,8 @@ impl<const N: usize> ExactlyNBytes<N> {
 
     pub fn xor(&self, other: &Self) -> Self {
         let mut result = [0u8; N];
-        for i in 0..N {
-            result[i] = self.0[i] ^ other.0[i];
+        for (i, item) in result.iter_mut().enumerate().take(N) {
+            *item = self.0[i] ^ other.0[i];
         }
         Self(result)
     }

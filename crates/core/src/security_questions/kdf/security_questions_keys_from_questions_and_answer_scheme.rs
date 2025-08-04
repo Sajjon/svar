@@ -38,26 +38,6 @@ pub struct SecurityQuestionsKDFSchemeVersion1 {
     pub kdf_encryption_keys_from_key_exchange_keys: SecurityQuestionsEncryptionKeysByXorEntropies,
 }
 
-impl HasSampleValues for SecurityQuestionsKDFSchemeVersion1 {
-    fn sample() -> Self {
-        Self {
-            entropies_from_questions_answer_and_salt:
-                SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8::sample(),
-            kdf_encryption_keys_from_key_exchange_keys:
-                SecurityQuestionsEncryptionKeysByXorEntropies::sample(),
-        }
-    }
-
-    fn sample_other() -> Self {
-        Self {
-            entropies_from_questions_answer_and_salt:
-                SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8::sample_other(),
-            kdf_encryption_keys_from_key_exchange_keys:
-                SecurityQuestionsEncryptionKeysByXorEntropies::sample_other(),
-        }
-    }
-}
-
 impl Default for SecurityQuestionsKDFSchemeVersion1 {
     fn default() -> Self {
         Self {
@@ -79,19 +59,9 @@ impl IsSecurityQuestionsKDFScheme for SecurityQuestionsKDFSchemeVersion1 {
 
         let kek = questions_answers_and_salts
             .iter()
-            .map(|qas| ent_from_qas.derive_entropies_from_question_answer_and_salt(&qas))
+            .map(|qas| ent_from_qas.derive_entropies_from_question_answer_and_salt(qas))
             .collect::<Result<_>>()?;
 
         Ok(kdf_enc.derive_encryption_keys_from(kek))
-    }
-}
-
-impl HasSampleValues for SecurityQuestionsKDFScheme {
-    fn sample() -> Self {
-        Self::Version1(SecurityQuestionsKDFSchemeVersion1::sample())
-    }
-
-    fn sample_other() -> Self {
-        Self::Version1(SecurityQuestionsKDFSchemeVersion1::sample_other())
     }
 }
