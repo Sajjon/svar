@@ -2,6 +2,7 @@ use serde::{Deserializer, Serializer, de, ser::SerializeStruct};
 
 use crate::prelude::*;
 
+/// A versioned encryption scheme.
 #[derive(Clone, PartialEq, Eq, Hash, derive_more::Debug)]
 pub enum EncryptionScheme {
     /// AES GCM 256 encryption
@@ -89,12 +90,14 @@ impl VersionedEncryption for EncryptionScheme {
 
 impl TryFrom<EncryptionSchemeVersion> for EncryptionScheme {
     type Error = Error;
+
     fn try_from(value: EncryptionSchemeVersion) -> Result<Self> {
         match value {
             EncryptionSchemeVersion::Version1 => Ok(Self::version1()),
         }
     }
 }
+
 impl VersionOfAlgorithm for EncryptionScheme {
     type Version = EncryptionSchemeVersion;
 
@@ -113,32 +116,28 @@ impl VersionOfAlgorithm for EncryptionScheme {
 
 #[cfg(test)]
 mod tests {
-    use insta::assert_json_snapshot;
+    use insta::{assert_json_snapshot, assert_snapshot};
 
     use super::*;
 
-    #[allow(clippy::upper_case_acronyms)]
-    type SUT = EncryptionScheme;
+    type Sut = EncryptionScheme;
 
     #[test]
     fn display() {
-        assert_eq!(
-            format!("{}", SUT::default()),
-            "EncryptionScheme: Version1 (AESGCM-256)"
-        );
+        assert_snapshot!(Sut::default())
     }
 
     #[test]
-    fn json_() {
-        assert_json_snapshot!(SUT::default())
+    fn json_snapshot() {
+        assert_json_snapshot!(Sut::default())
     }
 
     #[test]
     fn encryption_roundtrip() {
-        let sut = SUT::default();
+        let sut = Sut::default();
         let mut encryption_key = EncryptionKey::generate();
-        let mut decryption_key = encryption_key;
-        let msg = "Hello Radix";
+        let mut decryption_key = encryption_key.clone();
+        let msg = "open zesame";
         let msg_bytes: Vec<u8> = msg.bytes().collect();
 
         let encrypted = sut.encrypt(&msg_bytes, &mut encryption_key);
@@ -153,7 +152,7 @@ mod tests {
 
     #[test]
     fn decrypt_known() {
-        let sut = SUT::default();
+        let sut = Sut::default();
         let test = |encrypted_hex: &str, key_hex: &str, expected_plaintext: &str| {
             let mut decryption_key = EncryptionKey::from_str(key_hex).unwrap();
             let encrypted = hex_decode(encrypted_hex).unwrap();
@@ -170,7 +169,7 @@ mod tests {
 
     #[test]
     fn decrypt_invalid_sealed_box_is_err() {
-        let sut = SUT::default();
+        let sut = Sut::default();
         assert_eq!(
             sut.decrypt(Vec::new(), &mut EncryptionKey::sample()),
             Err(Error::InvalidAESBytesTooShort {

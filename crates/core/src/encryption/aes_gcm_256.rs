@@ -67,7 +67,10 @@ impl VersionOfAlgorithm for AesGcm256 {
 impl VersionedEncryption for AesGcm256 {
     /// Zeroizes `encryption_key` after usage.
     fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: &mut EncryptionKey) -> Vec<u8> {
-        let sealed_box = Self::seal(plaintext, Key::<aes_gcm::Aes256Gcm>::from(*encryption_key));
+        let sealed_box = Self::seal(
+            plaintext,
+            Key::<aes_gcm::Aes256Gcm>::from(encryption_key.clone()),
+        );
         encryption_key.zeroize();
         sealed_box.combined()
     }
@@ -79,7 +82,10 @@ impl VersionedEncryption for AesGcm256 {
         decryption_key: &mut EncryptionKey,
     ) -> Result<Vec<u8>> {
         let sealed_box = AesGcmSealedBox::try_from(cipher_text.as_ref())?;
-        let result = Self::open(sealed_box, Key::<aes_gcm::Aes256Gcm>::from(*decryption_key));
+        let result = Self::open(
+            sealed_box,
+            Key::<aes_gcm::Aes256Gcm>::from(decryption_key.clone()),
+        );
         decryption_key.zeroize();
         result
     }
@@ -96,13 +102,12 @@ mod tests {
 
     use super::*;
 
-    #[allow(clippy::upper_case_acronyms)]
-    type SUT = AesGcm256;
+    type Sut = AesGcm256;
 
     #[test]
     fn test_fail() {
         assert_eq!(
-            SUT::open(
+            Sut::open(
                 AesGcmSealedBox {
                     nonce: Exactly12Bytes::sample(),
                     cipher_text: hex_decode("deadbeef").unwrap(),

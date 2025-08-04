@@ -13,7 +13,8 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
 
         let key_from_combination_by_xor = |combination: Vec<&Exactly32Bytes>| -> EncryptionKey {
             let bytes = combination
-                .into_iter().copied()
+                .into_iter()
+                .copied()
                 .reduce(|acc, x| acc.xor(&x))
                 .unwrap();
             EncryptionKey::from(bytes)

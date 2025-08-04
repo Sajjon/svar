@@ -1,10 +1,6 @@
 use crate::prelude::*;
 pub trait VersionedEncryption: VersionOfAlgorithm {
-    fn encrypt(
-        &self,
-        plaintext: impl AsRef<[u8]>,
-        encryption_key: &mut EncryptionKey,
-    ) -> Vec<u8>;
+    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: &mut EncryptionKey) -> Vec<u8>;
 
     fn decrypt(
         &self,

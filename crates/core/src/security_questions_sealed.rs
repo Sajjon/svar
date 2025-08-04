@@ -7,7 +7,7 @@ pub struct SecurityQuestionsSealed {
 
     /// A versioned Key Derivation Function (KDF) algorithm used to produce a set
     /// of Encryption keys from a set of security questions and answers
-    pub kdf_scheme: SecurityQuestionsKDFScheme,
+    pub kdf_scheme: SecurityQuestionsKdfScheme,
 
     /// The scheme used to encrypt the Security Questions factor source
     /// secret using one combination of answers to questions, one of many.
@@ -24,7 +24,7 @@ impl SecurityQuestionsSealed {
     pub fn new_by_encrypting<Secret: AsRef<[u8]>>(
         secret: Secret,
         with: SecurityQuestionsAnswersAndSalts,
-        kdf_scheme: SecurityQuestionsKDFScheme,
+        kdf_scheme: SecurityQuestionsKdfScheme,
         encryption_scheme: EncryptionScheme,
     ) -> Result<Self> {
         let questions_answers_and_salts = with;
@@ -93,7 +93,7 @@ impl HasSampleValues for SecurityQuestionsSealed {
         let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
 
         let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample();
-        let kdf_scheme = SecurityQuestionsKDFScheme::default();
+        let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
         Self::new_by_encrypting(
             mnemonic,
@@ -107,7 +107,7 @@ impl HasSampleValues for SecurityQuestionsSealed {
     fn sample_other() -> Self {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample_other();
-        let kdf_scheme = SecurityQuestionsKDFScheme::default();
+        let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
         Self::new_by_encrypting(
             mnemonic,
@@ -124,17 +124,16 @@ mod tests {
 
     use super::*;
 
-    #[allow(clippy::upper_case_acronyms)]
-    type SUT = SecurityQuestionsSealed;
+    type Sut = SecurityQuestionsSealed;
 
     #[test]
     fn throws_if_incorrect_count() {
         let too_few =
             SecurityQuestionsAnswersAndSalts::from_iter([SecurityQuestionAnswerAndSalt::sample()]);
-        let res = SUT::new_by_encrypting(
+        let res = Sut::new_by_encrypting(
             "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
             too_few,
-            SecurityQuestionsKDFScheme::default(),
+            SecurityQuestionsKdfScheme::default(),
             EncryptionScheme::default(),
         );
         assert_eq!(

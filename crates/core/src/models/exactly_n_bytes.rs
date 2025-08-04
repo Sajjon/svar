@@ -5,6 +5,7 @@ pub type Exactly32Bytes = ExactlyNBytes<32>;
 pub type Exactly16Bytes = ExactlyNBytes<16>;
 pub type Exactly12Bytes = ExactlyNBytes<12>;
 
+/// A type that represents a byte array of exactly N bytes.
 #[derive(
     Zeroize,
     Clone,

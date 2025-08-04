@@ -2,7 +2,4 @@
 source: crates/core/src/encryption/encryption_scheme.rs
 expression: "Sut::default()"
 ---
-{
-  "description": "AESGCM-256",
-  "version": 1
-}
+EncryptionScheme: Version1 (AESGCM-256)

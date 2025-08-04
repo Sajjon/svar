@@ -94,12 +94,11 @@ mod tests {
 
     use super::*;
 
-    #[allow(clippy::upper_case_acronyms)]
-    type SUT = SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
+    type Sut = SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
 
     #[test]
     fn apa() {
-        let sut = SUT::default();
+        let sut = Sut::default();
         let non_trimmed = "FoO\nB.a\tR ' ! FiZz ? ‘ B ’ u＇ZZ";
         let trimmed = sut.trim_answer(non_trimmed);
         assert_eq!(trimmed, "foobarfizzbuzz".to_owned())

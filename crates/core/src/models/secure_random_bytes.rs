@@ -1,4 +1,4 @@
-use rand::{rngs::OsRng, RngCore};
+use rand::{RngCore, rngs::OsRng};
 
 /// Generates `N` random bytes using a cryptographically
 /// secure random generator and returns these bytes as

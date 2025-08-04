@@ -474,17 +474,16 @@ impl HasSampleValues for SecurityQuestion {
 mod tests {
     use super::*;
 
-    #[allow(clippy::upper_case_acronyms)]
-    type SUT = SecurityQuestion;
+    type Sut = SecurityQuestion;
 
     #[test]
     fn equality() {
-        assert_eq!(SUT::sample(), SUT::sample());
-        assert_eq!(SUT::sample_other(), SUT::sample_other());
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
     }
 
     #[test]
     fn inequality() {
-        assert_ne!(SUT::sample(), SUT::sample_other());
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

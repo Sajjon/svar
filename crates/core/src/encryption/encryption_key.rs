@@ -1,9 +1,14 @@
+use zeroize::ZeroizeOnDrop;
+
 use crate::prelude::*;
 
+/// A 32 bytes encryption key used for symmetric encryption.
+///
+/// Zeroizes its contents when dropped.
 #[derive(
+    ZeroizeOnDrop,
     Zeroize,
     Clone,
-    Copy,
     PartialEq,
     Eq,
     derive_more::Display,
@@ -15,12 +20,6 @@ use crate::prelude::*;
 )]
 #[serde(transparent)]
 pub struct EncryptionKey(pub Exactly32Bytes);
-
-// impl From<X25519PublicKey> for EncryptionKey {
-//     fn from(value: X25519PublicKey) -> EncryptionKey {
-//         EncryptionKey(Exactly32Bytes::from(&value.to_bytes()))
-//     }
-// }
 
 impl EncryptionKey {
     pub fn generate() -> Self {
@@ -38,6 +37,7 @@ impl HasSampleValues for EncryptionKey {
     fn sample() -> Self {
         Self::from(Exactly32Bytes::sample())
     }
+
     fn sample_other() -> Self {
         Self::from(Exactly32Bytes::sample_other())
     }
@@ -47,17 +47,16 @@ impl HasSampleValues for EncryptionKey {
 mod tests {
     use super::*;
 
-    #[allow(clippy::upper_case_acronyms)]
-    type SUT = EncryptionKey;
+    type Sut = EncryptionKey;
 
     #[test]
     fn equality() {
-        assert_eq!(SUT::sample(), SUT::sample());
-        assert_eq!(SUT::sample_other(), SUT::sample_other());
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
     }
 
     #[test]
     fn inequality() {
-        assert_ne!(SUT::sample(), SUT::sample_other());
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

@@ -1,22 +1,19 @@
 use crate::prelude::*;
 
 /// The KDF algorithm used to derive the decryption key from a combination of answers to security questions.
-///
-/// N.B. Not to be confused with the much simpler password based Key Derivation used
-/// to encrypt Profile part of manual file export.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
-pub enum SecurityQuestionsKDFScheme {
+pub enum SecurityQuestionsKdfScheme {
     /// First iteration of KDF for SecurityQuestions
     Version1(SecurityQuestionsKDFSchemeVersion1),
 }
 
-impl Default for SecurityQuestionsKDFScheme {
+impl Default for SecurityQuestionsKdfScheme {
     fn default() -> Self {
         Self::Version1(SecurityQuestionsKDFSchemeVersion1::default())
     }
 }
 
-impl IsSecurityQuestionsKDFScheme for SecurityQuestionsKDFScheme {
+impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKdfScheme {
     fn derive_encryption_keys_from_questions_answers_and_salts(
         &self,
         questions_answers_and_salts: SecurityQuestionsAnswersAndSalts,
@@ -49,19 +46,19 @@ impl Default for SecurityQuestionsKDFSchemeVersion1 {
     }
 }
 
-impl IsSecurityQuestionsKDFScheme for SecurityQuestionsKDFSchemeVersion1 {
+impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKDFSchemeVersion1 {
     fn derive_encryption_keys_from_questions_answers_and_salts(
         &self,
         questions_answers_and_salts: SecurityQuestionsAnswersAndSalts,
     ) -> Result<Vec<EncryptionKey>> {
-        let ent_from_qas = &self.entropies_from_questions_answer_and_salt;
-        let kdf_enc = &self.kdf_encryption_keys_from_key_exchange_keys;
+        let enropies_from_qas = &self.entropies_from_questions_answer_and_salt;
+        let encryption_keys_kdf = &self.kdf_encryption_keys_from_key_exchange_keys;
 
-        let kek = questions_answers_and_salts
+        let entropies = questions_answers_and_salts
             .iter()
-            .map(|qas| ent_from_qas.derive_entropies_from_question_answer_and_salt(qas))
+            .map(|qas| enropies_from_qas.derive_entropies_from_question_answer_and_salt(qas))
             .collect::<Result<_>>()?;
 
-        Ok(kdf_enc.derive_encryption_keys_from(kek))
+        Ok(encryption_keys_kdf.derive_encryption_keys_from(entropies))
     }
 }
