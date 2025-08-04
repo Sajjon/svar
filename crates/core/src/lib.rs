@@ -1,11 +1,13 @@
 mod encryption;
+mod kdf;
 mod models;
-mod security_questions;
+mod security_questions_sealed;
 
 pub mod prelude {
     pub use crate::encryption::*;
+    pub use crate::kdf::*;
     pub use crate::models::*;
-    pub use crate::security_questions::*;
+    pub use crate::security_questions_sealed::*;
 
     pub use std::str::FromStr;
 
