@@ -13,4 +13,3 @@ repository = "https://github.com/Sajjon/svar"
 svar-core.workspace = true
 
 # External dependencies
-aes-gcm.workspace = true

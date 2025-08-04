@@ -17,8 +17,8 @@ pub enum Error {
     #[error("Invalid hex: {underlying}")]
     InvalidHex { underlying: String },
 
-    #[error("Failed to decrypt sealed mnemonic")]
-    FailedToDecryptSealedMnemonic,
+    #[error("Failed to decrypt sealed secret")]
+    FailedToDecryptSealedSecret,
 
     #[error("Invalid AES bytes too short: expected at least {expected_at_least}, found {found}")]
     InvalidAESBytesTooShort {

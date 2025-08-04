@@ -10,18 +10,13 @@ repository = "https://github.com/Sajjon/svar"
 
 [dependencies]
 aes-gcm.workspace = true
-bip39.workspace = true
-bon.workspace = true
 derive_more.workspace = true
-dirs-next.workspace = true
-getset.workspace = true
 hex.workspace = true
 hkdf.workspace = true
 indexmap.workspace = true
 itertools.workspace = true
 log.workspace = true
 rand.workspace = true
-secrecy.workspace = true
 serde_json.workspace = true
 serde_repr.workspace = true
 serde_with = { version = "3.9", features = ["hex"] }
@@ -34,5 +29,4 @@ zeroize.workspace = true
 [dev-dependencies]
 insta.workspace = true
 pretty_assertions.workspace = true
-tempfile.workspace = true
 test-log.workspace = true

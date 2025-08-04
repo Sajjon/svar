@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
-/// A mnemonic encrypted by answers to security questions
+/// A secret encrypted by answers to security questions
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
-pub struct SecurityQuestionsSealedMnemonic {
+pub struct SecurityQuestionsSealed {
     pub security_questions: SecurityQuestions,
 
     /// A versioned Key Derivation Function (KDF) algorithm used to produce a set
@@ -10,19 +10,19 @@ pub struct SecurityQuestionsSealedMnemonic {
     pub kdf_scheme: SecurityQuestionsKDFScheme,
 
     /// The scheme used to encrypt the Security Questions factor source
-    /// mnemonic using one combination of answers to questions, one of many.
+    /// secret using one combination of answers to questions, one of many.
     pub encryption_scheme: EncryptionScheme,
 
-    /// The N many encryptions of the mnemonic, where N corresponds to the number of derived keys
+    /// The N many encryptions of the secret, where N corresponds to the number of derived keys
     /// from the `keyDerivationScheme`
     pub encryptions: Vec<Exactly60Bytes>, // FIXME: Set?
 }
 
-impl SecurityQuestionsSealedMnemonic {
+impl SecurityQuestionsSealed {
     pub const QUESTION_COUNT: usize = 6;
 
-    pub fn new_by_encrypting(
-        mnemonic: Mnemonic,
+    pub fn new_by_encrypting<Secret: AsRef<[u8]>>(
+        secret: Secret,
         with: SecurityQuestionsAnswersAndSalts,
         kdf_scheme: SecurityQuestionsKDFScheme,
         encryption_scheme: EncryptionScheme,
@@ -36,12 +36,10 @@ impl SecurityQuestionsSealedMnemonic {
         }
         let security_questions = questions_answers_and_salts
             .iter()
-            .map(|qa| qa.question().clone())
+            .map(|qa| qa.question.clone())
             .collect::<SecurityQuestions>();
 
-        let mnemonic_entropy = Exactly32Bytes::try_from(mnemonic.to_entropy().as_ref()).expect(
-            "SecurityQuestionsFactorSource mnemonics SHOULD ALWAYS be 32 bytes of entropy.",
-        );
+        let secret_binary = secret.as_ref();
 
         let encryption_keys = kdf_scheme
             .derive_encryption_keys_from_questions_answers_and_salts(questions_answers_and_salts)
@@ -49,7 +47,7 @@ impl SecurityQuestionsSealedMnemonic {
 
         let encryptions = encryption_keys
             .into_iter()
-            .map(|k| encryption_scheme.encrypt(mnemonic_entropy, &mut k.clone()))
+            .map(|k| encryption_scheme.encrypt(secret_binary, &mut k.clone()))
             .map(|vec| Exactly60Bytes::try_from(vec).expect("Should have been 60 bytes"))
             .collect_vec();
 
@@ -61,7 +59,10 @@ impl SecurityQuestionsSealedMnemonic {
         })
     }
 
-    pub fn decrypt(&self, with: SecurityQuestionsAnswersAndSalts) -> Result<Mnemonic> {
+    pub fn decrypt<Secret: TryFrom<Vec<u8>>>(
+        &self,
+        with: SecurityQuestionsAnswersAndSalts,
+    ) -> Result<Secret> {
         let answers_to_question = with;
 
         let decryption_keys = self
@@ -69,26 +70,28 @@ impl SecurityQuestionsSealedMnemonic {
             .derive_encryption_keys_from_questions_answers_and_salts(answers_to_question)?;
 
         for decryption_key in decryption_keys {
-            for encrypted_mnemonic in self.encryptions.iter() {
-                match self
+            for encrypted in self.encryptions.iter() {
+                if let Ok(decrypted_bytes) = self
                     .encryption_scheme
-                    .decrypt(encrypted_mnemonic.bytes(), &mut decryption_key.clone())
-                    .and_then(Exactly32Bytes::try_from)
+                    .decrypt(encrypted.bytes(), &mut decryption_key.clone())
                 {
-                    Ok(decrypted) => return Ok(Mnemonic::from_32bytes_entropy(decrypted)),
-                    _ => continue,
+                    if let Ok(secret) = Secret::try_from(decrypted_bytes) {
+                        return Ok(secret);
+                    }
                 }
+                // Else continue to the next encrypted/decryption_key combination
             }
         }
 
         // Failure
-        Err(Error::FailedToDecryptSealedMnemonic)
+        Err(Error::FailedToDecryptSealedSecret)
     }
 }
 
-impl HasSampleValues for SecurityQuestionsSealedMnemonic {
+impl HasSampleValues for SecurityQuestionsSealed {
     fn sample() -> Self {
-        let mnemonic = Mnemonic::sample();
+        let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
+
         let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample();
         let kdf_scheme = SecurityQuestionsKDFScheme::default();
         let encryption_scheme = EncryptionScheme::default();
@@ -102,7 +105,7 @@ impl HasSampleValues for SecurityQuestionsSealedMnemonic {
     }
 
     fn sample_other() -> Self {
-        let mnemonic = Mnemonic::sample();
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample_other();
         let kdf_scheme = SecurityQuestionsKDFScheme::default();
         let encryption_scheme = EncryptionScheme::default();
@@ -122,14 +125,14 @@ mod tests {
     use super::*;
 
     #[allow(clippy::upper_case_acronyms)]
-    type SUT = SecurityQuestionsSealedMnemonic;
+    type SUT = SecurityQuestionsSealed;
 
     #[test]
     fn throws_if_incorrect_count() {
         let too_few =
             SecurityQuestionsAnswersAndSalts::from_iter([SecurityQuestionAnswerAndSalt::sample()]);
         let res = SUT::new_by_encrypting(
-            Mnemonic::sample(),
+            "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
             too_few,
             SecurityQuestionsKDFScheme::default(),
             EncryptionScheme::default(),

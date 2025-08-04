@@ -79,7 +79,7 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
         question_answer_and_salt: &SecurityQuestionAnswerAndSalt,
     ) -> Result<Exactly32Bytes> {
         // Input Key Material: the answer, the most secret.
-        let ikm = self.bytes_from_answer(question_answer_and_salt.answer())?;
+        let ikm = self.bytes_from_answer(&question_answer_and_salt.answer)?;
 
         // We use `question` as info so that two same answers give different
         // output for two different questions, silly example might be:
@@ -87,9 +87,9 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
         // Q2: "Name of first boy/girl you kissed?" A2: "Björn"
         // Here A1 == A2, but we don't want their keys to be the same, so using
         // question as `info` => different keys.
-        let info = self.bytes_from_question(question_answer_and_salt.question());
+        let info = self.bytes_from_question(&question_answer_and_salt.question);
 
-        let hkdf = Hkdf::<Sha256>::new(Some(question_answer_and_salt.salt().as_ref()), &ikm);
+        let hkdf = Hkdf::<Sha256>::new(Some(question_answer_and_salt.salt.as_ref()), &ikm);
         let mut okm = [0u8; 32];
         hkdf.expand(&info, &mut okm).unwrap();
         Ok(Exactly32Bytes::from(okm))
