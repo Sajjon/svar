@@ -24,8 +24,9 @@
 //! /// Define your security questions
 //! ///
 //! /// ❗️ It's of the utmost importance that
-//! /// these questions are properly constructed with the thorough entropy
-//! /// analysis. This is hard, requires expert knowledge and takes time ❗️
+//! /// these questions are properly constructed with thorough entropy
+//! /// analysis. This is hard, requires expert knowledge and takes time.
+//! /// The questions below are examples, do not assume they're secure ❗️
 //! let q0 = SecurityQuestion {
 //!     id: 0,
 //!     version: 1,
