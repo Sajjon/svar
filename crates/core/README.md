@@ -217,8 +217,8 @@ assert_eq!(
 );
 ```
 
-You can now store the `sealed_secret` in a database or a file, it need not be
-encrypted further, as it is already encrypted with the answers to the
+You can now store the `sealed_secret` in a database or a file, it need not
+be encrypted further, as it is already encrypted with the answers to the
 security questions. However, since the users questions are part of the
 sealed secret, you should not store the sealed secret in a public place.
 

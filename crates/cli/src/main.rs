@@ -1,3 +1,8 @@
+use log::info;
+
+mod init_logging;
+
 fn main() {
-    println!("Hello, world!");
+    init_logging::init_logging();
+    info!("Hello, world!");
 }

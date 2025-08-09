@@ -1,11 +1,11 @@
 [package]
-name = "svar-cli"
+name = "svar"
 rust-version = "1.85.1"
 version = "0.1.0"
 edition = "2024"
 description = "POC binary for personal questions based encryption scheme useful cryptographic hierarchal deterministic key derivation."
 license = "MIT"
-documentation = "https://docs.rs/svar-cli"
+documentation = "https://docs.rs/svar"
 repository = "https://github.com/Sajjon/svar"
 
 [dependencies]
@@ -13,3 +13,10 @@ repository = "https://github.com/Sajjon/svar"
 svar-core.workspace = true
 
 # External dependencies
+chrono = "0.4.41"
+clap = { version = "4.5.39", features = ["derive"] }
+colored = "3.0.0"
+dirs-next = "2.0.0"
+fern = "0.7.1"
+inquire = "0.7.5"
+log.workspace = true
