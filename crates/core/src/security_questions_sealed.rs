@@ -2,7 +2,13 @@ use crate::prelude::*;
 
 /// A secret encrypted by answers to security questions
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
-pub struct SecurityQuestionsSealed {
+pub struct SecurityQuestionsSealed<Secret: IsSecret> {
+    /// Holds the type of the secret, used for serialization
+    #[serde(skip)]
+    phantom: std::marker::PhantomData<Secret>,
+
+    /// The security questions used to derive the keys
+    /// used to encrypt the secret.
     pub security_questions: SecurityQuestions,
 
     /// A versioned Key Derivation Function (KDF) algorithm used to produce a set
@@ -15,54 +21,68 @@ pub struct SecurityQuestionsSealed {
 
     /// The N many encryptions of the secret, where N corresponds to the number of derived keys
     /// from the `keyDerivationScheme`
-    pub encryptions: Vec<Exactly60Bytes>, // FIXME: Set?
+    pub encryptions: IndexSet<HexBytes>,
 }
 
-impl SecurityQuestionsSealed {
+impl<Secret: IsSecret> SecurityQuestionsSealed<Secret> {
     pub const QUESTION_COUNT: usize = 6;
 
-    pub fn new_by_encrypting<Secret: AsRef<[u8]>>(
+    /// Creates a new sealed secret by encrypting the provided secret with the
+    /// provided security questions, answers and salts, using the provided KDF scheme
+    /// and encryption scheme.
+    pub fn new_by_encrypting(
         secret: Secret,
         with: SecurityQuestionsAnswersAndSalts,
         kdf_scheme: SecurityQuestionsKdfScheme,
         encryption_scheme: EncryptionScheme,
     ) -> Result<Self> {
         let questions_answers_and_salts = with;
+
+        // Validate that we have the correct number of questions and answers
         if questions_answers_and_salts.len() != Self::QUESTION_COUNT {
             return Err(Error::InvalidQuestionsAndAnswersCount {
                 expected: Self::QUESTION_COUNT,
                 found: questions_answers_and_salts.len(),
             });
         }
+
+        // Clone the security questions from the answers and salts, we need to
+        // store them in the sealed secret
         let security_questions = questions_answers_and_salts
             .iter()
             .map(|qa| qa.question.clone())
             .collect::<SecurityQuestions>();
 
-        let secret_binary = secret.as_ref();
-
+        // Derive the encryption keys from the questions, answers and salts
         let encryption_keys = kdf_scheme
-            .derive_encryption_keys_from_questions_answers_and_salts(questions_answers_and_salts)
-            .expect("TODO validate that answer is non-empty BEFORE passing it here.");
+            .derive_encryption_keys_from_questions_answers_and_salts(questions_answers_and_salts)?;
 
+        let secret_bytes = secret
+            .to_bytes()
+            .map_err(|e| Error::FailedToConvertSecretToBytes {
+                underlying: e.to_string(),
+            })?;
+
+        // Encrypt the secret with each of the derived encryption keys
         let encryptions = encryption_keys
             .into_iter()
-            .map(|encryption_key| encryption_scheme.encrypt(secret_binary, encryption_key))
-            .map(|vec| Exactly60Bytes::try_from(vec).expect("Should have been 60 bytes"))
-            .collect_vec();
+            .map(|encryption_key| encryption_scheme.encrypt(&secret_bytes, encryption_key))
+            .map(HexBytes::from)
+            .collect::<IndexSet<HexBytes>>();
 
-        Ok(Self {
+        // Create the sealed secret with the security questions, encryptions, KDF scheme and encryption scheme
+        let sealed = Self {
+            phantom: std::marker::PhantomData,
             security_questions,
             encryptions,
             kdf_scheme,
             encryption_scheme,
-        })
+        };
+
+        Ok(sealed)
     }
 
-    pub fn decrypt<Secret: TryFrom<Vec<u8>>>(
-        &self,
-        with: SecurityQuestionsAnswersAndSalts,
-    ) -> Result<Secret> {
+    pub fn decrypt(&self, with: SecurityQuestionsAnswersAndSalts) -> Result<Secret> {
         let answers_to_question = with;
 
         let decryption_keys = self
@@ -73,9 +93,9 @@ impl SecurityQuestionsSealed {
             for encrypted in self.encryptions.iter() {
                 if let Ok(decrypted_bytes) = self
                     .encryption_scheme
-                    .decrypt(encrypted.bytes(), decryption_key.clone())
+                    .decrypt(encrypted.as_ref(), decryption_key.clone())
                 {
-                    if let Ok(secret) = Secret::try_from(decrypted_bytes) {
+                    if let Ok(secret) = Secret::from_bytes(decrypted_bytes) {
                         return Ok(secret);
                     }
                 }
@@ -88,7 +108,7 @@ impl SecurityQuestionsSealed {
     }
 }
 
-impl HasSampleValues for SecurityQuestionsSealed {
+impl HasSampleValues for SecurityQuestionsSealed<String> {
     fn sample() -> Self {
         let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
 
@@ -96,7 +116,7 @@ impl HasSampleValues for SecurityQuestionsSealed {
         let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
         Self::new_by_encrypting(
-            mnemonic,
+            mnemonic.to_string(),
             questions_answers_and_salts,
             kdf_scheme,
             encryption_scheme,
@@ -110,7 +130,7 @@ impl HasSampleValues for SecurityQuestionsSealed {
         let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
         Self::new_by_encrypting(
-            mnemonic,
+            mnemonic.to_string(),
             questions_answers_and_salts,
             kdf_scheme,
             encryption_scheme,
@@ -124,14 +144,28 @@ mod tests {
 
     use super::*;
 
-    type Sut = SecurityQuestionsSealed;
+    type Sut = SecurityQuestionsSealed<String>;
+
+    #[test]
+    fn serialize() {
+        let json =
+            include_str!("fixtures/svar_core__security_questions_sealed__tests__serialize.json");
+        let sut: Sut = serde_json::from_str(json).expect("Failed to deserialize");
+        let decrypted: String = sut
+            .decrypt(SecurityQuestionsAnswersAndSalts::sample())
+            .unwrap();
+        assert_eq!(
+            decrypted,
+            "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
+        );
+    }
 
     #[test]
     fn throws_if_incorrect_count() {
         let too_few =
             SecurityQuestionsAnswersAndSalts::from_iter([SecurityQuestionAnswerAndSalt::sample()]);
         let res = Sut::new_by_encrypting(
-            "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+            "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong".to_string(),
             too_few,
             SecurityQuestionsKdfScheme::default(),
             EncryptionScheme::default(),

@@ -1,0 +1,98 @@
+---
+source: crates/core/src/models/answer/security_questions_answers_and_salts.rs
+expression: "Sut::sample()"
+---
+[
+  {
+    "question": {
+      "id": 0,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "What was the first exam you failed",
+      "expected_answer_format": {
+        "answer_structure": "<SCHOOL>, <SCHOOL_GRADE>, <SUBJECT>",
+        "example_answer": "MIT, year 4, Python",
+        "unsafe_answers": []
+      }
+    },
+    "answer": "MIT, year 4, Python",
+    "salt": "acedacedacedacedacedacedacedacedacedacedacedacedacedacedacedaced"
+  },
+  {
+    "question": {
+      "id": 1,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "In which city and which year did your parents meet?",
+      "expected_answer_format": {
+        "answer_structure": "<CITY>, <YEAR>",
+        "example_answer": "Berlin, 1976",
+        "unsafe_answers": []
+      }
+    },
+    "answer": "London, 1973",
+    "salt": "babebabebabebabebabebabebabebabebabebabebabebabebabebabebabebabe"
+  },
+  {
+    "question": {
+      "id": 2,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "What was the first concert you attended?",
+      "expected_answer_format": {
+        "answer_structure": "<ARTIST>, <LOCATION>, <YEAR>",
+        "example_answer": "Jean-Michel Jarre, Paris La Défense, 1990",
+        "unsafe_answers": []
+      }
+    },
+    "answer": "Jean-Michel Jarre, Paris La Défense, 1990",
+    "salt": "cafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafe"
+  },
+  {
+    "question": {
+      "id": 3,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "What was the name of the boy or the girl you first kissed?",
+      "expected_answer_format": {
+        "answer_structure": "<NAME>",
+        "example_answer": "Maria",
+        "unsafe_answers": []
+      }
+    },
+    "answer": "John Doe",
+    "salt": "deaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddead"
+  },
+  {
+    "question": {
+      "id": 4,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "Where were you when you had your first kiss?",
+      "expected_answer_format": {
+        "answer_structure": "<LOCATION>",
+        "example_answer": "At bus stop outside of Dallas",
+        "unsafe_answers": [
+          "Specifying only a country as location would be unsafe"
+        ]
+      }
+    },
+    "answer": "Behind the shed in the oak tree forrest.",
+    "salt": "ecadecadecadecadecadecadecadecadecadecadecadecadecadecadecadecad"
+  },
+  {
+    "question": {
+      "id": 5,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "In what city and which year did you meet your spouse/significant other?",
+      "expected_answer_format": {
+        "answer_structure": "<CITY>, <YEAR>",
+        "example_answer": "Berlin, 1976",
+        "unsafe_answers": []
+      }
+    },
+    "answer": "Tokyo, 1989",
+    "salt": "fadefadefadefadefadefadefadefadefadefadefadefadefadefadefadefade"
+  }
+]

@@ -1,0 +1,99 @@
+{
+  "security_questions": [
+    {
+      "id": 0,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "What was the first exam you failed",
+      "expected_answer_format": {
+        "answer_structure": "<SCHOOL>, <SCHOOL_GRADE>, <SUBJECT>",
+        "example_answer": "MIT, year 4, Python",
+        "unsafe_answers": []
+      }
+    },
+    {
+      "id": 1,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "In which city and which year did your parents meet?",
+      "expected_answer_format": {
+        "answer_structure": "<CITY>, <YEAR>",
+        "example_answer": "Berlin, 1976",
+        "unsafe_answers": []
+      }
+    },
+    {
+      "id": 2,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "What was the first concert you attended?",
+      "expected_answer_format": {
+        "answer_structure": "<ARTIST>, <LOCATION>, <YEAR>",
+        "example_answer": "Jean-Michel Jarre, Paris La Défense, 1990",
+        "unsafe_answers": []
+      }
+    },
+    {
+      "id": 3,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "What was the name of the boy or the girl you first kissed?",
+      "expected_answer_format": {
+        "answer_structure": "<NAME>",
+        "example_answer": "Maria",
+        "unsafe_answers": []
+      }
+    },
+    {
+      "id": 4,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "Where were you when you had your first kiss?",
+      "expected_answer_format": {
+        "answer_structure": "<LOCATION>",
+        "example_answer": "At bus stop outside of Dallas",
+        "unsafe_answers": [
+          "Specifying only a country as location would be unsafe"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "version": 1,
+      "kind": "Freeform",
+      "question": "In what city and which year did you meet your spouse/significant other?",
+      "expected_answer_format": {
+        "answer_structure": "<CITY>, <YEAR>",
+        "example_answer": "Berlin, 1976",
+        "unsafe_answers": []
+      }
+    }
+  ],
+  "kdf_scheme": {
+    "Version1": {
+      "entropies_from_questions_answer_and_salt": null,
+      "kdf_encryption_keys_from_key_exchange_keys": null
+    }
+  },
+  "encryption_scheme": {
+    "description": "AESGCM-256",
+    "version": 1
+  },
+  "encryptions": [
+    "cb8e4dce4c828d03d5c5593f871197b9f3eb69161e440f2183f9b2bdd0150501257dac54705cb33c245efe36f9583e359a4c7695705eaae753688e0a20c3974aa17b1d296f34f938a39d7aee1b",
+    "642a39d278f662917d483e5b45024d74ac4ea4e7dcd36d9df399e7f0c587c8796a1e7e874429afcab8e41e867e06ad75bd0a40f34cc4339babbea0273cb83ff9bb5d1f91d8593961d729493ca7",
+    "424eba443da26eb3d3a19f214370135c3ce9d165b8112220cb5c0c61b4d2e4065bbfa1bb4e0e4d89c8f1b3ff7e1807612fbbb555c09a632bde8f13d99f7440e294b79c16b520fee3c38b4f1a48",
+    "837fb279f544a7c8b94074d0ed87dc15cc1e6b84c7ba251ece8c1c19290162aa3f8bf12a4a0818ea25d058e6b041c9a4345c3325099adcf618cb5b80dade2ebe808c3f5a91c3be7d408ca88bdf",
+    "897085b438d692afac3d89c793c65a7fdccdd0642640817c1875e90cf5f055f9d34413bdbb12a3c84a0cc31c969385b3249dc03a0399ab87a2d1de184b096c973277188de94354ed4c1c5f08ff",
+    "67e92238677276ceffd0e4a6ea42be1cdde2d2ed35b46624b38a4054ec0f1e0a720038f81277acc8f5184d20dbcc410e9e0f111f3854f7d982597075fd2741e4121fc0b47204a44dcf0085dc80",
+    "f543d01e457c1fcf39def428ffd669ed4fed67ca787337de1c0d7b5df1135dd183c937933736a3f8d173219b73a9c052dd892446e9a3c5df53a54964bbbc19d87ed8bfdbfd99729c3a57411254",
+    "423fce8272b84f6b1d486d438467ff8cdc6bab94b6460059bc39858bdf54ed020d0472e6320f39d4f55971e32630a61d7831bf7753400e29bc931eb9ae3f0e1c218cf79e263dd6b7140d4f0270",
+    "efdce3b5ef6475956d975731d65d4bd3fd5bd513e2ab2d6616c7d9131f612637b32fa67962aece4ad5cdc44cfb813d6fd4bfa372594f2b553f37ff5bcabb076eb77adbf26cd9d0e2d68cc0cad0",
+    "561bebe015335ec48cd9b12f4df777804e97162c6cc29bf9c309e63fe138676c167f852e52de3f566494306169ba53e58f5c965e2ba707c637d1f80785a61945ab1b18347a583b250b4133581e",
+    "587773961562f951bb43458be03e51657328c33af7da9f0e015d16d7a208e0516b4cd1ad09ea7593d094388510460924c0c013d1e37a6a32f828dd0d4a069c866a07bf428dc48d71d5361fd2c9",
+    "1fdcac5030172a8ad089202750653edf5a071d6e4a6a7a60da0786d7a32314ed501c06c7fff2e48f6a6c6945ed9077e9e8663410704e0dbc752e094f80504f340bcdf5db855ea70b88ae1acf69",
+    "e902264ec881fb89fd7d9a8d4cf338333ee59a30dcd17fb8701613e313d754d6701c35d474f738597defac5e5c2abfd451a852522d700d3d385eb83ec33fce602c8e78d747ffb1e6fa4a4c5bac",
+    "76e123cd565eb3726a0fb5d89d669cf7a69955f808a5b04209dfc867240063e92522bd2ca2fe7b4634663dc10a04b40aa3cef51f9891fd88212fbee9fafd5380b1e7df1eee1e384e4d125bdddb",
+    "ba1bffa7e256ae239dba71be284e4ea14225f0f47ec27b5ad7b7353c83b12e94cc9621600ad7200b6c6c7028c7ab8f25cac81e880156b59bcff03d0224b1e62f74e7e2d76929ce90668dc5ab3e"
+  ]
+}

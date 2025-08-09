@@ -62,3 +62,16 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKDFSchemeVersion1 {
         Ok(encryption_keys_kdf.derive_encryption_keys_from(entropies))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use insta::assert_json_snapshot;
+
+    type Sut = SecurityQuestionsKdfScheme;
+
+    #[test]
+    fn serialize() {
+        assert_json_snapshot!(Sut::default());
+    }
+}

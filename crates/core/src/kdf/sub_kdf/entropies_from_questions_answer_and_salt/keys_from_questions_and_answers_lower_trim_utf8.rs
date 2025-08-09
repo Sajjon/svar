@@ -60,13 +60,6 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
 }
 
 impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
-    /// ```ignore
-    /// let FORBIDDEN = whitespace.union(delimiters);
-    /// let ikm = answer.remove(FORBIDDEN).lowercase();
-    /// let info = question.utf8();
-    /// let hkdf = Hkdf<SHA256>::new(salt, ikm);
-    /// let okm = hkdf.expand(info);
-    /// ```
     pub fn derive_entropies_from_question_answer_and_salt(
         &self,
         question_answer_and_salt: &SecurityQuestionAnswerAndSalt,
@@ -97,7 +90,7 @@ mod tests {
     type Sut = SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
 
     #[test]
-    fn apa() {
+    fn trimming() {
         let sut = Sut::default();
         let non_trimmed = "FoO\nB.a\tR ' ! FiZz ? ‘ B ’ u＇ZZ";
         let trimmed = sut.trim_answer(non_trimmed);

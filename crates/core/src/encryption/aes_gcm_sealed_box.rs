@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+/// The cipher of an AES GCM encryption alongside the nonce used. The cipher contains
+/// the encrypted payload and the authentication tag.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct AesGcmSealedBox {
     /// Nonce is 12 bytes
@@ -9,10 +11,15 @@ pub struct AesGcmSealedBox {
     pub(super) cipher_text: Vec<u8>,
 }
 
+/// The length of the authentication tag.
+pub const AUTH_TAG_LEN: usize = 16;
+
+/// The length of the nonce used in AES GCM.
+pub const NONCE_LEN: usize = 12;
+
 impl AesGcmSealedBox {
-    pub const AUTH_TAG_LEN: usize = 16;
-    pub const NONCE_LEN: usize = 12;
-    pub const LOWER_BOUND_LEN: usize = Self::AUTH_TAG_LEN + Self::NONCE_LEN + 1; // at least 1 byte cipher. VERY much LOWER bound
+    /// At least 1 byte cipher. VERY much LOWER bound
+    pub const LOWER_BOUND_LEN: usize = AUTH_TAG_LEN + NONCE_LEN + 1;
 
     pub(super) fn combined(self) -> Vec<u8> {
         let mut combined = Vec::<u8>::new();
@@ -36,9 +43,9 @@ impl TryFrom<&[u8]> for AesGcmSealedBox {
             });
         }
 
-        let nonce_bytes = &bytes[..Self::NONCE_LEN];
+        let nonce_bytes = &bytes[..NONCE_LEN];
         let nonce = Exactly12Bytes::try_from(nonce_bytes).unwrap();
-        let cipher_text = &bytes[Self::NONCE_LEN..];
+        let cipher_text = &bytes[NONCE_LEN..];
         Ok(Self {
             nonce,
             cipher_text: cipher_text.to_owned(),

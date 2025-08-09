@@ -22,6 +22,7 @@ use crate::prelude::*;
 pub struct EncryptionKey(pub Exactly32Bytes);
 
 impl EncryptionKey {
+    /// Generates a new `EncryptionKey` using a CSPRNG.
     pub fn generate() -> Self {
         Self::from(Exactly32Bytes::generate())
     }

@@ -55,7 +55,7 @@ impl<'de> Deserialize<'de> for EncryptionScheme {
 
 impl EncryptionScheme {
     pub fn version1() -> Self {
-        Self::Version1(AesGcm256::default())
+        Self::Version1(AesGcm256)
     }
 }
 

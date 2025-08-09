@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-pub type Exactly60Bytes = ExactlyNBytes<60>;
 pub type Exactly32Bytes = ExactlyNBytes<32>;
 pub type Exactly16Bytes = ExactlyNBytes<16>;
 pub type Exactly12Bytes = ExactlyNBytes<12>;

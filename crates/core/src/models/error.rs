@@ -14,6 +14,9 @@ pub enum Error {
     #[error("Invalid mnemonic phrase: {underlying}")]
     InvalidMnemonicPhrase { underlying: String },
 
+    #[error("Failed to convert secret to bytes: {underlying}")]
+    FailedToConvertSecretToBytes { underlying: String },
+
     #[error("Invalid hex: {underlying}")]
     InvalidHex { underlying: String },
 

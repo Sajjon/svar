@@ -1,0 +1,10 @@
+---
+source: crates/core/src/kdf/security_questions_keys_from_questions_and_answer_scheme.rs
+expression: "Sut::default()"
+---
+{
+  "Version1": {
+    "entropies_from_questions_answer_and_salt": null,
+    "kdf_encryption_keys_from_key_exchange_keys": null
+  }
+}

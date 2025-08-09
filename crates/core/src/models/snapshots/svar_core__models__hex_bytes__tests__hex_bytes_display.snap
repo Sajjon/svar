@@ -1,0 +1,5 @@
+---
+source: crates/core/src/models/hex_bytes.rs
+expression: "Sut::sample()"
+---
+deadbeef

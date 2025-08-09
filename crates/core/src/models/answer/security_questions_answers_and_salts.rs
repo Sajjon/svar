@@ -98,3 +98,17 @@ impl HasSampleValues for SecurityQuestionsAnswersAndSalts {
         ])
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use insta::assert_json_snapshot;
+
+    use super::*;
+
+    type Sut = SecurityQuestionsAnswersAndSalts;
+
+    #[test]
+    fn serialize() {
+        assert_json_snapshot!(Sut::sample());
+    }
+}

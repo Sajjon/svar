@@ -9,39 +9,38 @@ use aes_gcm::{
 #[derive(Clone, Default, PartialEq, Eq, Hash, derive_more::Display, derive_more::Debug)]
 pub struct AesGcm256;
 
-impl HasSampleValues for AesGcm256 {
-    fn sample() -> Self {
-        Self::default()
-    }
-
-    fn sample_other() -> Self {
-        Self::default()
-    }
-}
-
 impl AesGcm256 {
+    /// The description of the AES GCM 256 encryption scheme.
     pub const DESCRIPTION: &'static str = "AESGCM-256";
 }
 
 impl AesGcm256 {
+    /// Encrypts the provided plaintext using the given encryption key.
     fn seal(
         plaintext: impl AsRef<[u8]>,
-        encryption_key: Key<aes_gcm::Aes256Gcm>,
+        encryption_key: impl Into<Key<aes_gcm::Aes256Gcm>>,
     ) -> AesGcmSealedBox {
+        let encryption_key = encryption_key.into();
         let cipher = aes_gcm::Aes256Gcm::new(&encryption_key);
-        let nonce = aes_gcm::Aes256Gcm::generate_nonce(&mut OsRng); // 12 bytes; unique per message
+
+        let nonce = aes_gcm::Aes256Gcm::generate_nonce(&mut OsRng);
+
         let cipher_text = cipher
             .encrypt(&nonce, plaintext.as_ref())
             .expect("AES encrypt never fails for valid nonce.");
-        let nonce = Exactly12Bytes::try_from(nonce.as_slice()).unwrap();
+
+        let nonce = ExactlyNBytes::<NONCE_LEN>::try_from(nonce.as_slice())
+            .expect("AesGcm should always use fixed nonce byte count");
 
         AesGcmSealedBox { nonce, cipher_text }
     }
 
+    /// Decrypts the provided sealed box using the given decryption key.
     fn open(
         sealed_box: AesGcmSealedBox,
-        decryption_key: Key<aes_gcm::Aes256Gcm>,
+        decryption_key: impl Into<Key<aes_gcm::Aes256Gcm>>,
     ) -> Result<Vec<u8>> {
+        let decryption_key = decryption_key.into();
         let cipher = aes_gcm::Aes256Gcm::new(&decryption_key);
         let cipher_text = sealed_box.cipher_text;
         cipher
@@ -67,10 +66,7 @@ impl VersionOfAlgorithm for AesGcm256 {
 impl VersionedEncryption for AesGcm256 {
     /// Zeroizes `encryption_key` after usage.
     fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8> {
-        let sealed_box = Self::seal(
-            plaintext,
-            Key::<aes_gcm::Aes256Gcm>::from(encryption_key.clone()),
-        );
+        let sealed_box = Self::seal(plaintext, encryption_key);
         sealed_box.combined()
     }
 
@@ -81,11 +77,7 @@ impl VersionedEncryption for AesGcm256 {
         decryption_key: EncryptionKey,
     ) -> Result<Vec<u8>> {
         let sealed_box = AesGcmSealedBox::try_from(cipher_text.as_ref())?;
-        let result = Self::open(
-            sealed_box,
-            Key::<aes_gcm::Aes256Gcm>::from(decryption_key.clone()),
-        );
-        result
+        Self::open(sealed_box, decryption_key)
     }
 }
 
