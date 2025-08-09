@@ -13,14 +13,15 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
     ) -> Result<EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>> {
         let size = MIN_CORRECT_ANSWERS;
 
-        let key_from_combination_by_xor = |combination: Vec<&Exactly32Bytes>| -> EncryptionKey {
-            let bytes = combination
-                .into_iter()
-                .copied()
-                .reduce(|acc, x| acc.xor(&x))
-                .unwrap();
-            EncryptionKey::from(bytes)
-        };
+        let key_from_combination_by_xor =
+            |combination: Vec<&Exactly32Bytes>| -> EncryptionKey {
+                let bytes = combination
+                    .into_iter()
+                    .copied()
+                    .reduce(|acc, x| acc.xor(&x))
+                    .unwrap();
+                EncryptionKey::from(bytes)
+            };
 
         let combinations = entropies.iter().combinations(size);
 

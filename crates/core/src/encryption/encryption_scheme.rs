@@ -43,7 +43,9 @@ impl Serialize for EncryptionScheme {
 }
 
 impl<'de> Deserialize<'de> for EncryptionScheme {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
         #[derive(Deserialize, Serialize)]
         struct Wrapper {
             version: EncryptionSchemeVersion,
@@ -68,9 +70,15 @@ impl Default for EncryptionScheme {
 impl VersionedEncryption for EncryptionScheme {
     /// Encrypts `plaintext` using `encryption_key` using
     /// the `self` `EncryptionScheme`, returning the cipher text as `Vec<u8>`.
-    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8> {
+    fn encrypt(
+        &self,
+        plaintext: impl AsRef<[u8]>,
+        encryption_key: EncryptionKey,
+    ) -> Vec<u8> {
         match self {
-            EncryptionScheme::Version1(scheme) => scheme.encrypt(plaintext, encryption_key),
+            EncryptionScheme::Version1(scheme) => {
+                scheme.encrypt(plaintext, encryption_key)
+            }
         }
     }
 
@@ -83,7 +91,9 @@ impl VersionedEncryption for EncryptionScheme {
         decryption_key: EncryptionKey,
     ) -> Result<Vec<u8>> {
         match self {
-            EncryptionScheme::Version1(scheme) => scheme.decrypt(cipher_text, decryption_key),
+            EncryptionScheme::Version1(scheme) => {
+                scheme.decrypt(cipher_text, decryption_key)
+            }
         }
     }
 }
@@ -150,12 +160,13 @@ mod tests {
     #[test]
     fn decrypt_known() {
         let sut = Sut::default();
-        let test = |encrypted_hex: &str, key_hex: &str, expected_plaintext: &str| {
-            let decryption_key = EncryptionKey::from_str(key_hex).unwrap();
-            let encrypted = hex_decode(encrypted_hex).unwrap();
-            let decrypted = sut.decrypt(encrypted, decryption_key).unwrap();
-            assert_eq!(hex::encode(decrypted), expected_plaintext);
-        };
+        let test =
+            |encrypted_hex: &str, key_hex: &str, expected_plaintext: &str| {
+                let decryption_key = EncryptionKey::from_str(key_hex).unwrap();
+                let encrypted = hex_decode(encrypted_hex).unwrap();
+                let decrypted = sut.decrypt(encrypted, decryption_key).unwrap();
+                assert_eq!(hex::encode(decrypted), expected_plaintext);
+            };
 
         test(
             "4c2266de48fd17a4bb52d5883751d054258755ce004154ea204a73a4c35e",

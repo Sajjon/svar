@@ -79,7 +79,7 @@
 //! };
 //!
 //! /// The secret the user wants to protect
-//! let user_secret = "users super secret".to_owned();
+//! let user_secret = "user's super sensitive secret".to_owned();
 //!
 //! /// Prompt user for answers to the questions
 //! let qas0 = SecurityQuestionAnswerAndSalt::by_answering_freeform(

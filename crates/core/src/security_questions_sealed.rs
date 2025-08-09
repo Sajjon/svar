@@ -31,8 +31,11 @@ pub struct SecurityQuestionsSealed<
     pub encryptions: IndexSet<HexBytes>,
 }
 
-impl<Secret: IsSecret, const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: usize>
-    SecurityQuestionsSealed<Secret, QUESTION_COUNT, MIN_CORRECT_ANSWERS>
+impl<
+    Secret: IsSecret,
+    const QUESTION_COUNT: usize,
+    const MIN_CORRECT_ANSWERS: usize,
+> SecurityQuestionsSealed<Secret, QUESTION_COUNT, MIN_CORRECT_ANSWERS>
 {
     /// Creates a new sealed secret by encrypting the provided secret with the
     /// provided security questions, answers and salts, using the provided KDF scheme
@@ -79,16 +82,18 @@ impl<Secret: IsSecret, const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: u
         let encryption_keys = kdf_scheme
             .derive_encryption_keys_from_questions_answers_and_salts::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(questions_answers_and_salts)?;
 
-        let secret_bytes = secret
-            .to_bytes()
-            .map_err(|e| Error::FailedToConvertSecretToBytes {
+        let secret_bytes = secret.to_bytes().map_err(|e| {
+            Error::FailedToConvertSecretToBytes {
                 underlying: e.to_string(),
-            })?;
+            }
+        })?;
 
         // Encrypt the secret with each of the derived encryption keys
         let encryptions = encryption_keys
             .into_iter()
-            .map(|encryption_key| encryption_scheme.encrypt(&secret_bytes, encryption_key))
+            .map(|encryption_key| {
+                encryption_scheme.encrypt(&secret_bytes, encryption_key)
+            })
             .map(HexBytes::from)
             .collect::<IndexSet<HexBytes>>();
 
@@ -137,7 +142,8 @@ impl HasSampleValues for SecurityQuestionsSealed<String, 6, 3> {
     fn sample() -> Self {
         let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
 
-        let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample();
+        let questions_answers_and_salts =
+            SecurityQuestionsAnswersAndSalts::sample();
         let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
         Self::with_schemes(
@@ -151,7 +157,8 @@ impl HasSampleValues for SecurityQuestionsSealed<String, 6, 3> {
 
     fn sample_other() -> Self {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-        let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample_other();
+        let questions_answers_and_salts =
+            SecurityQuestionsAnswersAndSalts::sample_other();
         let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
         Self::with_schemes(
@@ -173,9 +180,11 @@ mod tests {
 
     #[test]
     fn serialize() {
-        let json =
-            include_str!("fixtures/svar_core__security_questions_sealed__tests__serialize.json");
-        let sut: Sut = serde_json::from_str(json).expect("Failed to deserialize");
+        let json = include_str!(
+            "fixtures/svar_core__security_questions_sealed__tests__serialize.json"
+        );
+        let sut: Sut =
+            serde_json::from_str(json).expect("Failed to deserialize");
         let decrypted: String = sut
             .decrypt(SecurityQuestionsAnswersAndSalts::sample())
             .unwrap();

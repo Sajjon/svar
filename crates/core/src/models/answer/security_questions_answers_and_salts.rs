@@ -22,7 +22,9 @@ pub struct SecurityQuestionsAnswersAndSalts<const QUESTION_COUNT: usize>(
     [SecurityQuestionAnswerAndSalt; QUESTION_COUNT],
 );
 
-impl<const QUESTION_COUNT: usize> SecurityQuestionsAnswersAndSalts<QUESTION_COUNT> {
+impl<const QUESTION_COUNT: usize>
+    SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>
+{
     pub fn try_from_iter(
         qas: impl IntoIterator<Item = SecurityQuestionAnswerAndSalt>,
     ) -> Result<Self> {
@@ -41,7 +43,9 @@ impl<const QUESTION_COUNT: usize> SecurityQuestionsAnswersAndSalts<QUESTION_COUN
     }
 }
 
-impl<const QUESTION_COUNT: usize> Serialize for SecurityQuestionsAnswersAndSalts<QUESTION_COUNT> {
+impl<const QUESTION_COUNT: usize> Serialize
+    for SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -89,7 +93,10 @@ impl<'de, const QUESTION_COUNT: usize> Deserialize<'de>
             }
         }
 
-        let arr = deserializer.deserialize_tuple(QUESTION_COUNT, ArrayVisitor::<QUESTION_COUNT>)?;
+        let arr = deserializer.deserialize_tuple(
+            QUESTION_COUNT,
+            ArrayVisitor::<QUESTION_COUNT>,
+        )?;
         Ok(SecurityQuestionsAnswersAndSalts(arr))
     }
 }

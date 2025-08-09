@@ -6,6 +6,8 @@ pub trait IsSecurityQuestionsKdfScheme {
         const MIN_CORRECT_ANSWERS: usize,
     >(
         &self,
-        questions_answers_and_salts: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
+        questions_answers_and_salts: SecurityQuestionsAnswersAndSalts<
+            QUESTION_COUNT,
+        >,
     ) -> Result<EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>>;
 }

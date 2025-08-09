@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 /// A specification of expected format for an answer to a security question.
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display)]
+#[derive(
+    Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display,
+)]
 #[display("{answer_structure}")]
 pub struct SecurityQuestionExpectedAnswerFormat {
     /// E.g. `"<CITY>, <YEAR>"`

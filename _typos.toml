@@ -1,4 +1,4 @@
 [files]
-extend-exclude = []
-
-[default.extend-words]
+extend-exclude = [
+	"crates/core/src/kdf/sub_kdf/entropies_from_questions_answer_and_salt/test_lower_trim_utf8.rs"
+]

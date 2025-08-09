@@ -2,7 +2,11 @@ use crate::prelude::*;
 
 /// Versioning of encryption algorithms.
 pub trait VersionedEncryption: VersionOfAlgorithm {
-    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8>;
+    fn encrypt(
+        &self,
+        plaintext: impl AsRef<[u8]>,
+        encryption_key: EncryptionKey,
+    ) -> Vec<u8>;
 
     fn decrypt(
         &self,

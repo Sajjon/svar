@@ -31,11 +31,13 @@ impl std::str::FromStr for HexBytes {
 
 impl HasSampleValues for HexBytes {
     fn sample() -> Self {
-        Self::from_str("deadbeef").expect("Failed to create sample HexBytes from string")
+        Self::from_str("deadbeef")
+            .expect("Failed to create sample HexBytes from string")
     }
 
     fn sample_other() -> Self {
-        Self::from_str("cafebabe").expect("Failed to create sample_other HexBytes from string")
+        Self::from_str("cafebabe")
+            .expect("Failed to create sample_other HexBytes from string")
     }
 }
 

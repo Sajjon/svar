@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 /// A security question
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display)]
+#[derive(
+    Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display,
+)]
 #[display(
     "SecurityQuestion(id: {id}, version: {version}, kind: {kind}, question: {question}, format: {expected_answer_format})"
 )]
@@ -247,7 +249,10 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             10,
             "What is the name of a college you applied to but didn't attend?",
-            SecurityQuestionExpectedAnswerFormat::new("<UNIVERSITY NAME>", "Oxford"),
+            SecurityQuestionExpectedAnswerFormat::new(
+                "<UNIVERSITY NAME>",
+                "Oxford",
+            ),
         )
     }
 
@@ -264,7 +269,10 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             11,
             "What was the name of the first school you remember attending?",
-            SecurityQuestionExpectedAnswerFormat::new("<SCHOOL NAME>", "Hogwartz"),
+            SecurityQuestionExpectedAnswerFormat::new(
+                "<SCHOOL NAME>",
+                "Hogwartz",
+            ),
         )
     }
 
@@ -319,7 +327,9 @@ impl SecurityQuestion {
             SecurityQuestionExpectedAnswerFormat::with_details(
                 "<STREET NAME WITHOUT NUMBER>",
                 "Baker Street",
-                ["Bad if had several different best friends during high school."],
+                [
+                    "Bad if had several different best friends during high school.",
+                ],
             ),
         )
     }

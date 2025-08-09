@@ -7,7 +7,9 @@ use sha2::Sha256;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
 
-impl HasSampleValues for SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
+impl HasSampleValues
+    for SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8
+{
     fn sample() -> Self {
         Self
     }
@@ -31,8 +33,8 @@ pub(crate) const SECURITY_QUESTIONS_TRIMMED_CHARS: &[char] = &[
     '?', // Rationale: Same as dot (also strange for an answer to a question to contain a question mark)
     '\'', // Rationale: Feels like an unnecessary risk for differences, sometimes some might omit apostrophe (U+0027)
     '\"', // Rationale: Same as apostrophe (this is "Quotation Mark" (U+0022))
-    '‘',  // Rationale: Same as apostrophe (this is "Left Single Quotation Mark" (U+2018))
-    '’',  // Rationale: Same as apostrophe (this is "Right Single Quotation Mark" (U+2019))
+    '‘', // Rationale: Same as apostrophe (this is "Left Single Quotation Mark" (U+2018))
+    '’', // Rationale: Same as apostrophe (this is "Right Single Quotation Mark" (U+2019))
     '＇', // Rationale: Same as apostrophe (this is "Full Width Apostrophe" (U+FF07))
 ];
 
@@ -75,25 +77,12 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
         // question as `info` => different keys.
         let info = self.bytes_from_question(&question_answer_and_salt.question);
 
-        let hkdf = Hkdf::<Sha256>::new(Some(question_answer_and_salt.salt.as_ref()), &ikm);
+        let hkdf = Hkdf::<Sha256>::new(
+            Some(question_answer_and_salt.salt.as_ref()),
+            &ikm,
+        );
         let mut okm = [0u8; 32];
         hkdf.expand(&info, &mut okm).unwrap();
         Ok(Exactly32Bytes::from(okm))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    type Sut = SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
-
-    #[test]
-    fn trimming() {
-        let sut = Sut::default();
-        let non_trimmed = "FoO\nB.a\tR ' ! FiZz ? ‘ B ’ u＇ZZ";
-        let trimmed = sut.trim_answer(non_trimmed);
-        assert_eq!(trimmed, "foobarfizzbuzz".to_owned())
     }
 }

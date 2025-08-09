@@ -4,11 +4,18 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    #[error("Invalid questions and answers count: expected {expected}, found {found}")]
+    #[error(
+        "Invalid questions and answers count: expected {expected}, found {found}"
+    )]
     InvalidQuestionsAndAnswersCount { expected: usize, found: usize },
 
-    #[error("Questions must be greater than or equal to answers: {questions} < {answers}")]
-    QuestionsMustBeGreaterThanOrEqualAnswers { questions: usize, answers: usize },
+    #[error(
+        "Questions must be greater than or equal to answers: {questions} < {answers}"
+    )]
+    QuestionsMustBeGreaterThanOrEqualAnswers {
+        questions: usize,
+        answers: usize,
+    },
 
     #[error("Invalid byte count: expected {expected}, found {found}")]
     InvalidByteCount { expected: usize, found: usize },
@@ -16,7 +23,9 @@ pub enum Error {
     #[error("AES Decryption failed: {underlying}")]
     AESDecryptionFailed { underlying: String },
 
-    #[error("Invalid security question kind: expected {expected}, found {found}")]
+    #[error(
+        "Invalid security question kind: expected {expected}, found {found}"
+    )]
     InvalidSecurityQuestionKind {
         expected: SecurityQuestionKind,
         found: SecurityQuestionKind,
@@ -34,7 +43,9 @@ pub enum Error {
     #[error("Failed to decrypt sealed secret")]
     FailedToDecryptSealedSecret,
 
-    #[error("Invalid AES bytes too short: expected at least {expected_at_least}, found {found}")]
+    #[error(
+        "Invalid AES bytes too short: expected at least {expected_at_least}, found {found}"
+    )]
     InvalidAESBytesTooShort {
         expected_at_least: usize,
         found: usize,

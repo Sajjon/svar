@@ -6,7 +6,15 @@ use aes_gcm::{
 };
 
 /// AES GCM 256 encryption
-#[derive(Clone, Default, PartialEq, Eq, Hash, derive_more::Display, derive_more::Debug)]
+#[derive(
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    Hash,
+    derive_more::Display,
+    derive_more::Debug,
+)]
 pub struct AesGcm256;
 
 impl AesGcm256 {
@@ -65,7 +73,11 @@ impl VersionOfAlgorithm for AesGcm256 {
 
 impl VersionedEncryption for AesGcm256 {
     /// Zeroizes `encryption_key` after usage.
-    fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8> {
+    fn encrypt(
+        &self,
+        plaintext: impl AsRef<[u8]>,
+        encryption_key: EncryptionKey,
+    ) -> Vec<u8> {
         let sealed_box = Self::seal(plaintext, encryption_key);
         sealed_box.combined()
     }
@@ -102,7 +114,9 @@ mod tests {
                     nonce: Exactly12Bytes::sample(),
                     cipher_text: hex_decode("deadbeef").unwrap(),
                 },
-                Key::<aes_gcm::Aes256Gcm>::from(*Exactly32Bytes::sample_aced().bytes())
+                Key::<aes_gcm::Aes256Gcm>::from(
+                    *Exactly32Bytes::sample_aced().bytes()
+                )
             ),
             Err(Error::AESDecryptionFailed {
                 underlying: "aead::Error".to_owned()
