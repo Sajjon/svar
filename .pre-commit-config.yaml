@@ -37,5 +37,5 @@ repos:
         name: cargo readme
         language: system
         types: [file, rust, markdown]
-        entry: scripts/cargo_readme_with_install.sh --check
+        entry: scripts/run_cargo_readme_install_if_needed.sh
         pass_filenames: false
