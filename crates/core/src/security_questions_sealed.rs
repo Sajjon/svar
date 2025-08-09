@@ -37,7 +37,22 @@ impl<Secret: IsSecret, const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: u
     /// Creates a new sealed secret by encrypting the provided secret with the
     /// provided security questions, answers and salts, using the provided KDF scheme
     /// and encryption scheme.
-    pub fn new_by_encrypting(
+    pub fn seal(
+        secret: Secret,
+        with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
+    ) -> Result<Self> {
+        Self::with_schemes(
+            secret,
+            with,
+            SecurityQuestionsKdfScheme::default(),
+            EncryptionScheme::default(),
+        )
+    }
+
+    /// Creates a new sealed secret by encrypting the provided secret with the
+    /// provided security questions, answers and salts, using the provided KDF scheme
+    /// and encryption scheme.
+    pub fn with_schemes(
         secret: Secret,
         with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
         kdf_scheme: SecurityQuestionsKdfScheme,
@@ -125,7 +140,7 @@ impl HasSampleValues for SecurityQuestionsSealed<String, 6, 3> {
         let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample();
         let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
-        Self::new_by_encrypting(
+        Self::with_schemes(
             mnemonic.to_string(),
             questions_answers_and_salts,
             kdf_scheme,
@@ -139,7 +154,7 @@ impl HasSampleValues for SecurityQuestionsSealed<String, 6, 3> {
         let questions_answers_and_salts = SecurityQuestionsAnswersAndSalts::sample_other();
         let kdf_scheme = SecurityQuestionsKdfScheme::default();
         let encryption_scheme = EncryptionScheme::default();
-        Self::new_by_encrypting(
+        Self::with_schemes(
             mnemonic.to_string(),
             questions_answers_and_salts,
             kdf_scheme,

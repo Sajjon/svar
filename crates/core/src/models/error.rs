@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
@@ -13,6 +15,12 @@ pub enum Error {
 
     #[error("AES Decryption failed: {underlying}")]
     AESDecryptionFailed { underlying: String },
+
+    #[error("Invalid security question kind: expected {expected}, found {found}")]
+    InvalidSecurityQuestionKind {
+        expected: SecurityQuestionKind,
+        found: SecurityQuestionKind,
+    },
 
     #[error("Invalid mnemonic phrase: {underlying}")]
     InvalidMnemonicPhrase { underlying: String },

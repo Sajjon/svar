@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-
 /// A security question
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display)]
 #[display(

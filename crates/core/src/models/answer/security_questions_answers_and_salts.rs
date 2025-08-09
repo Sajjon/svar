@@ -23,7 +23,7 @@ pub struct SecurityQuestionsAnswersAndSalts<const QUESTION_COUNT: usize>(
 );
 
 impl<const QUESTION_COUNT: usize> SecurityQuestionsAnswersAndSalts<QUESTION_COUNT> {
-    pub fn new(qas: impl IntoIterator<Item = SecurityQuestionAnswerAndSalt>) -> Result<Self> {
+    pub fn try_from_iter(qas: impl IntoIterator<Item = SecurityQuestionAnswerAndSalt>) -> Result<Self> {
         let qas = qas.into_iter().collect::<IndexSet<_>>();
         let len = qas.len();
         let arr: [SecurityQuestionAnswerAndSalt; QUESTION_COUNT] = qas
@@ -81,7 +81,7 @@ impl<'de, const QUESTION_COUNT: usize> Deserialize<'de>
                     items.push(item);
                 }
 
-                SecurityQuestionsAnswersAndSalts::new(items)
+                SecurityQuestionsAnswersAndSalts::try_from_iter(items)
                     .map(|s| s.0)
                     .map_err(serde::de::Error::custom)
             }
@@ -96,7 +96,7 @@ impl HasSampleValues for SecurityQuestionsAnswersAndSalts<6> {
     fn sample() -> Self {
         type Q = SecurityQuestion;
         type QA = SecurityQuestionAnswerAndSalt;
-        Self::new([
+        Self::try_from_iter([
             QA {
                 question: Q::failed_exam(),
                 answer: "MIT, year 4, Python".to_owned(),
@@ -134,7 +134,7 @@ impl HasSampleValues for SecurityQuestionsAnswersAndSalts<6> {
     fn sample_other() -> Self {
         type Q = SecurityQuestion;
         type QA = SecurityQuestionAnswerAndSalt;
-        Self::new([
+        Self::try_from_iter([
             QA {
                 question: Q::child_middle_name(),
                 answer: "Joe".to_owned(),
