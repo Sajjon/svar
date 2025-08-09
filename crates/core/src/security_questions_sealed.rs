@@ -1,8 +1,15 @@
 use crate::prelude::*;
 
+pub const DEFAULT_QUESTION_COUNT: usize = 6;
+pub const DEFAULT_MIN_CORRECT_ANSWERS: usize = 4;
+
 /// A secret encrypted by answers to security questions
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
-pub struct SecurityQuestionsSealed<Secret: IsSecret> {
+pub struct SecurityQuestionsSealed<
+    Secret: IsSecret,
+    const QUESTION_COUNT: usize = DEFAULT_QUESTION_COUNT,
+    const MIN_CORRECT_ANSWERS: usize = DEFAULT_MIN_CORRECT_ANSWERS,
+> {
     /// Holds the type of the secret, used for serialization
     #[serde(skip)]
     phantom: std::marker::PhantomData<Secret>,
@@ -24,24 +31,24 @@ pub struct SecurityQuestionsSealed<Secret: IsSecret> {
     pub encryptions: IndexSet<HexBytes>,
 }
 
-impl<Secret: IsSecret> SecurityQuestionsSealed<Secret> {
-    pub const QUESTION_COUNT: usize = 6;
-
+impl<Secret: IsSecret, const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: usize>
+    SecurityQuestionsSealed<Secret, QUESTION_COUNT, MIN_CORRECT_ANSWERS>
+{
     /// Creates a new sealed secret by encrypting the provided secret with the
     /// provided security questions, answers and salts, using the provided KDF scheme
     /// and encryption scheme.
     pub fn new_by_encrypting(
         secret: Secret,
-        with: SecurityQuestionsAnswersAndSalts,
+        with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
         kdf_scheme: SecurityQuestionsKdfScheme,
         encryption_scheme: EncryptionScheme,
     ) -> Result<Self> {
         let questions_answers_and_salts = with;
 
         // Validate that we have the correct number of questions and answers
-        if questions_answers_and_salts.len() != Self::QUESTION_COUNT {
+        if questions_answers_and_salts.len() != QUESTION_COUNT {
             return Err(Error::InvalidQuestionsAndAnswersCount {
-                expected: Self::QUESTION_COUNT,
+                expected: QUESTION_COUNT,
                 found: questions_answers_and_salts.len(),
             });
         }
@@ -55,7 +62,7 @@ impl<Secret: IsSecret> SecurityQuestionsSealed<Secret> {
 
         // Derive the encryption keys from the questions, answers and salts
         let encryption_keys = kdf_scheme
-            .derive_encryption_keys_from_questions_answers_and_salts(questions_answers_and_salts)?;
+            .derive_encryption_keys_from_questions_answers_and_salts::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(questions_answers_and_salts)?;
 
         let secret_bytes = secret
             .to_bytes()
@@ -82,12 +89,15 @@ impl<Secret: IsSecret> SecurityQuestionsSealed<Secret> {
         Ok(sealed)
     }
 
-    pub fn decrypt(&self, with: SecurityQuestionsAnswersAndSalts) -> Result<Secret> {
+    pub fn decrypt(
+        &self,
+        with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
+    ) -> Result<Secret> {
         let answers_to_question = with;
 
         let decryption_keys = self
             .kdf_scheme
-            .derive_encryption_keys_from_questions_answers_and_salts(answers_to_question)?;
+            .derive_encryption_keys_from_questions_answers_and_salts::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(answers_to_question)?;
 
         for decryption_key in decryption_keys {
             for encrypted in self.encryptions.iter() {
@@ -108,7 +118,7 @@ impl<Secret: IsSecret> SecurityQuestionsSealed<Secret> {
     }
 }
 
-impl HasSampleValues for SecurityQuestionsSealed<String> {
+impl HasSampleValues for SecurityQuestionsSealed<String, 6, 3> {
     fn sample() -> Self {
         let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
 
@@ -157,25 +167,6 @@ mod tests {
         assert_eq!(
             decrypted,
             "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
-        );
-    }
-
-    #[test]
-    fn throws_if_incorrect_count() {
-        let too_few =
-            SecurityQuestionsAnswersAndSalts::from_iter([SecurityQuestionAnswerAndSalt::sample()]);
-        let res = Sut::new_by_encrypting(
-            "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong".to_string(),
-            too_few,
-            SecurityQuestionsKdfScheme::default(),
-            EncryptionScheme::default(),
-        );
-        assert_eq!(
-            res,
-            Err(Error::InvalidQuestionsAndAnswersCount {
-                expected: 6,
-                found: 1
-            })
         );
     }
 }

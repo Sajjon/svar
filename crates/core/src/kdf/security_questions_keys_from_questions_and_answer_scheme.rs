@@ -14,12 +14,15 @@ impl Default for SecurityQuestionsKdfScheme {
 }
 
 impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKdfScheme {
-    fn derive_encryption_keys_from_questions_answers_and_salts(
+    fn derive_encryption_keys_from_questions_answers_and_salts<
+        const QUESTION_COUNT: usize,
+        const MIN_CORRECT_ANSWERS: usize,
+    >(
         &self,
-        questions_answers_and_salts: SecurityQuestionsAnswersAndSalts,
+        questions_answers_and_salts: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
     ) -> Result<Vec<EncryptionKey>> {
         match self {
-            Self::Version1(kdf) => kdf.derive_encryption_keys_from_questions_answers_and_salts(
+            Self::Version1(kdf) => kdf.derive_encryption_keys_from_questions_answers_and_salts::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(
                 questions_answers_and_salts,
             ),
         }
@@ -47,9 +50,12 @@ impl Default for SecurityQuestionsKDFSchemeVersion1 {
 }
 
 impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKDFSchemeVersion1 {
-    fn derive_encryption_keys_from_questions_answers_and_salts(
+    fn derive_encryption_keys_from_questions_answers_and_salts<
+        const QUESTION_COUNT: usize,
+        const MIN_CORRECT_ANSWERS: usize,
+    >(
         &self,
-        questions_answers_and_salts: SecurityQuestionsAnswersAndSalts,
+        questions_answers_and_salts: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
     ) -> Result<Vec<EncryptionKey>> {
         let enropies_from_qas = &self.entropies_from_questions_answer_and_salt;
         let encryption_keys_kdf = &self.kdf_encryption_keys_from_key_exchange_keys;
@@ -57,9 +63,19 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKDFSchemeVersion1 {
         let entropies = questions_answers_and_salts
             .iter()
             .map(|qas| enropies_from_qas.derive_entropies_from_question_answer_and_salt(qas))
-            .collect::<Result<_>>()?;
+            .collect::<Result<Vec<Exactly32Bytes>>>()?;
 
-        Ok(encryption_keys_kdf.derive_encryption_keys_from(entropies))
+        let len = entropies.len();
+        let entropies: [Exactly32Bytes; QUESTION_COUNT] =
+            entropies
+                .try_into()
+                .map_err(|_| Error::InvalidQuestionsAndAnswersCount {
+                    expected: QUESTION_COUNT,
+                    found: len,
+                })?;
+
+        Ok(encryption_keys_kdf
+            .derive_encryption_keys_from::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(entropies))
     }
 }
 

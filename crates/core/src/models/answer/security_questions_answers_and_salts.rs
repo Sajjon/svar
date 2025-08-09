@@ -1,12 +1,16 @@
 use crate::prelude::*;
 
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
+    de::{SeqAccess, Visitor},
+    ser::SerializeSeq,
+};
+use std::fmt;
+
 #[derive(
     Clone,
     PartialEq,
     Eq,
-    Serialize,
-    Deserialize,
-    Default,
     derive_more::Debug,
     derive_more::Display,
     derive_more::Deref,
@@ -14,20 +18,85 @@ use crate::prelude::*;
     derive_more::From,
 )]
 #[display("SecurityQuestionsAnswersAndSalts({})", self.0.len())]
-#[serde(transparent)]
-pub struct SecurityQuestionsAnswersAndSalts(IndexSet<SecurityQuestionAnswerAndSalt>);
+pub struct SecurityQuestionsAnswersAndSalts<const QUESTION_COUNT: usize>(
+    [SecurityQuestionAnswerAndSalt; QUESTION_COUNT],
+);
 
-impl FromIterator<SecurityQuestionAnswerAndSalt> for SecurityQuestionsAnswersAndSalts {
-    fn from_iter<T: IntoIterator<Item = SecurityQuestionAnswerAndSalt>>(iter: T) -> Self {
-        Self(IndexSet::from_iter(iter))
+impl<const QUESTION_COUNT: usize> SecurityQuestionsAnswersAndSalts<QUESTION_COUNT> {
+    pub fn new(qas: impl IntoIterator<Item = SecurityQuestionAnswerAndSalt>) -> Result<Self> {
+        let qas = qas.into_iter().collect::<IndexSet<_>>();
+        let len = qas.len();
+        let arr: [SecurityQuestionAnswerAndSalt; QUESTION_COUNT] = qas
+            .into_iter()
+            .collect::<Vec<_>>()
+            .try_into()
+            .map_err(|_| Error::InvalidQuestionsAndAnswersCount {
+                expected: QUESTION_COUNT,
+                found: len,
+            })?;
+
+        Ok(Self(arr))
     }
 }
 
-impl HasSampleValues for SecurityQuestionsAnswersAndSalts {
+impl<const QUESTION_COUNT: usize> Serialize for SecurityQuestionsAnswersAndSalts<QUESTION_COUNT> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(QUESTION_COUNT))?;
+        for item in &self.0 {
+            seq.serialize_element(item)?;
+        }
+        seq.end()
+    }
+}
+
+impl<'de, const QUESTION_COUNT: usize> Deserialize<'de>
+    for SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct ArrayVisitor<const N: usize>;
+
+        impl<'de, const N: usize> Visitor<'de> for ArrayVisitor<N> {
+            type Value = [SecurityQuestionAnswerAndSalt; N];
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(formatter, "an array of length {}", N)
+            }
+
+            fn visit_seq<A>(
+                self,
+                mut seq: A,
+            ) -> Result<[SecurityQuestionAnswerAndSalt; N], A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut items = Vec::with_capacity(N);
+
+                while let Some(item) = seq.next_element()? {
+                    items.push(item);
+                }
+
+                SecurityQuestionsAnswersAndSalts::new(items)
+                    .map(|s| s.0)
+                    .map_err(serde::de::Error::custom)
+            }
+        }
+
+        let arr = deserializer.deserialize_tuple(QUESTION_COUNT, ArrayVisitor::<QUESTION_COUNT>)?;
+        Ok(SecurityQuestionsAnswersAndSalts(arr))
+    }
+}
+
+impl HasSampleValues for SecurityQuestionsAnswersAndSalts<6> {
     fn sample() -> Self {
         type Q = SecurityQuestion;
         type QA = SecurityQuestionAnswerAndSalt;
-        Self::from_iter([
+        Self::new([
             QA {
                 question: Q::failed_exam(),
                 answer: "MIT, year 4, Python".to_owned(),
@@ -59,12 +128,13 @@ impl HasSampleValues for SecurityQuestionsAnswersAndSalts {
                 salt: Exactly32Bytes::sample_fade(),
             },
         ])
+        .expect("Should have been 6 questions and answers")
     }
 
     fn sample_other() -> Self {
         type Q = SecurityQuestion;
         type QA = SecurityQuestionAnswerAndSalt;
-        Self::from_iter([
+        Self::new([
             QA {
                 question: Q::child_middle_name(),
                 answer: "Joe".to_owned(),
@@ -96,6 +166,7 @@ impl HasSampleValues for SecurityQuestionsAnswersAndSalts {
                 salt: Exactly32Bytes::sample_fade(),
             },
         ])
+        .expect("Should have been 6 questions and answers")
     }
 }
 
@@ -105,7 +176,7 @@ mod tests {
 
     use super::*;
 
-    type Sut = SecurityQuestionsAnswersAndSalts;
+    type Sut = SecurityQuestionsAnswersAndSalts<6>;
 
     #[test]
     fn serialize() {

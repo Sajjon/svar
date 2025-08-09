@@ -4,12 +4,14 @@ use crate::prelude::*;
 pub struct SecurityQuestionsEncryptionKeysByXorEntropies;
 
 impl SecurityQuestionsEncryptionKeysByXorEntropies {
-    fn encryption_keys_from_xor_between_all_combinations(
+    fn encryption_keys_from_xor_between_all_combinations<
+        const QUESTION_COUNT: usize,
+        const MIN_CORRECT_ANSWERS: usize,
+    >(
         &self,
-        entropies: Vec<Exactly32Bytes>,
-        minus: usize,
+        entropies: [Exactly32Bytes; QUESTION_COUNT],
     ) -> Vec<EncryptionKey> {
-        let size = entropies.len() - minus;
+        let size = MIN_CORRECT_ANSWERS;
 
         let key_from_combination_by_xor = |combination: Vec<&Exactly32Bytes>| -> EncryptionKey {
             let bytes = combination
@@ -28,14 +30,15 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
             .collect()
     }
 
-    pub fn derive_encryption_keys_from(
+    pub fn derive_encryption_keys_from<
+        const QUESTION_COUNT: usize,
+        const MIN_CORRECT_ANSWERS: usize,
+    >(
         &self,
-        entropies: Vec<Exactly32Bytes>,
+        entropies: [Exactly32Bytes; QUESTION_COUNT],
     ) -> Vec<EncryptionKey> {
-        let minus = 2;
-        assert!((entropies.len() - minus) > 1);
-
-        self.encryption_keys_from_xor_between_all_combinations(entropies, minus)
+        assert!(QUESTION_COUNT >= MIN_CORRECT_ANSWERS);
+        self.encryption_keys_from_xor_between_all_combinations::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(entropies)
     }
 }
 
