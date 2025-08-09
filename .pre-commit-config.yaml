@@ -33,3 +33,9 @@ repos:
             types: [file, rust]
             entry: cargo nextest run --all
             pass_filenames: false
+          - id: cargo readme
+            name: cargo readme
+            language: system
+            types: [file, rust]
+            entry: scripts/cargo_readme_with_install.sh --check
+            pass_filenames: false
