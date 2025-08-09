@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-
 /// A specification of expected format for an answer to a security question.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display)]
 #[display("{answer_structure}")]
@@ -61,7 +60,7 @@ impl HasSampleValues for SecurityQuestionExpectedAnswerFormat {
     fn sample() -> Self {
         Self::preset_city_and_year()
     }
-    
+
     fn sample_other() -> Self {
         Self::name()
     }

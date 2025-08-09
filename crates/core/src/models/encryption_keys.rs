@@ -19,7 +19,7 @@ fn n_choose_m<const N: usize, const M: usize>() -> Result<usize> {
     let questions = N;
     let answers = M;
     if answers > questions {
-        return Err(Error::QuestionsMustBeGreaterThanOrEqualAnswers { questions, answers });
+        Err(Error::QuestionsMustBeGreaterThanOrEqualAnswers { questions, answers })
     } else {
         Ok((0..M).fold(1, |acc, i| acc * (N - i) / (i + 1)))
     }
@@ -40,8 +40,14 @@ impl<const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: usize>
         }
         Ok(Self(keys))
     }
+}
 
-    pub fn into_iter(self) -> impl Iterator<Item = EncryptionKey> {
+impl<const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: usize> IntoIterator
+    for EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>
+{
+    type Item = EncryptionKey;
+    type IntoIter = <IndexSet<EncryptionKey> as IntoIterator>::IntoIter;
+    fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }

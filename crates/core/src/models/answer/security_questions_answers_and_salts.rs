@@ -23,7 +23,9 @@ pub struct SecurityQuestionsAnswersAndSalts<const QUESTION_COUNT: usize>(
 );
 
 impl<const QUESTION_COUNT: usize> SecurityQuestionsAnswersAndSalts<QUESTION_COUNT> {
-    pub fn try_from_iter(qas: impl IntoIterator<Item = SecurityQuestionAnswerAndSalt>) -> Result<Self> {
+    pub fn try_from_iter(
+        qas: impl IntoIterator<Item = SecurityQuestionAnswerAndSalt>,
+    ) -> Result<Self> {
         let qas = qas.into_iter().collect::<IndexSet<_>>();
         let len = qas.len();
         let arr: [SecurityQuestionAnswerAndSalt; QUESTION_COUNT] = qas

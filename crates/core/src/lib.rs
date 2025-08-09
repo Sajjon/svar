@@ -16,7 +16,6 @@
 //! extern crate svar_core;
 //! use svar_core::prelude::*;
 //!
-//! error
 //! /// Number of security questions
 //! const QUESTIONS_COUNT: usize = 4;
 //! /// Minimum number of correct answers required to decrypt
