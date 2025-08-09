@@ -10,6 +10,11 @@ pub enum Error {
     InvalidQuestionsAndAnswersCount { expected: usize, found: usize },
 
     #[error(
+        "You provided an answer for a question that is not part of the security questions: {question}"
+    )]
+    UnrelatedQuestionProvided { question: String },
+
+    #[error(
         "Questions must be greater than or equal to answers: {questions} < {answers}"
     )]
     QuestionsMustBeGreaterThanOrEqualAnswers {

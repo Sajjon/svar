@@ -17,9 +17,9 @@
 //! use svar_core::prelude::*;
 //!
 //! /// Number of security questions
-//! const QUESTIONS_COUNT: usize = 4;
+//! const Q: usize = 4;
 //! /// Minimum number of correct answers required to decrypt
-//! const MIN_CORRECT_ANSWERS: usize = 3;
+//! const A: usize = 3;
 //!
 //! /// Define your security questions
 //! ///
@@ -104,25 +104,40 @@
 //!
 //! /// Create the security questions answers and salts
 //! /// (We clone so that we can use them later for decryption)
-//! let qas = SecurityQuestionsAnswersAndSalts::<QUESTIONS_COUNT>::from([qas0.clone(), qas1.clone(), qas2.clone(), qas3.clone()]);
+//! let qas = SecurityQuestionsAnswersAndSalts::<Q>::from([
+//!     qas0.clone(),
+//!     qas1.clone(),
+//!     qas2.clone(),
+//!     qas3.clone(),
+//! ]);
 //!
 //! /// Encrypt secret with the security questions answers and salts
 //! /// The generic argument 0: the type of secret - just a String in this case
 //! /// The generic argument 1: the number of questions - 4 in this case
-//! /// The generic argument 2: the minimum number of correct answers required to decrypt - 3 in this case
+//! /// The generic argument 2: the minimum number of correct answers required
+//! /// to decrypt - 3 in this case
 //! ///
-//! /// Later, when the user wants to decrypt the secret, they can answer the questions
-//! /// with some of the answers being incorrect
-//! let sealed_secret = SecurityQuestionsSealed::<String, QUESTIONS_COUNT, MIN_CORRECT_ANSWERS>::seal(user_secret.clone(), qas).unwrap();
+//! /// Later, when the user wants to decrypt the secret, they can answer the
+//! /// questions with some of the answers being incorrect
+//! let sealed_secret = SecurityQuestionsSealed::<String, Q, A>::seal(
+//!     user_secret.clone(),
+//!     qas
+//! ).unwrap();
 //!
-//! /// Define incorrect answer for question 0 - we will use it later to demonstrate
-//! /// that we can still decrypt the secret with 3 correct answers and 1 incorrect answer
+//! /// Define incorrect answer for question 0 - we will use it later to
+//! /// demonstrate that we can still decrypt the secret with 3 correct answers
+//! /// and 1 incorrect answer
 //! let qas0_incorrect = SecurityQuestionAnswerAndSalt::by_answering_freeform(
 //!     q0.clone(),
 //!     |_q, _format| "Incorrect answer for Q0".to_owned()
 //! ).unwrap();
 //!
-//! let qas_q0_incorrect = SecurityQuestionsAnswersAndSalts::<QUESTIONS_COUNT>::from([qas0_incorrect.clone(), qas1.clone(), qas2.clone(), qas3.clone()]);
+//! let qas_q0_incorrect = SecurityQuestionsAnswersAndSalts::<Q>::from([
+//!     qas0_incorrect.clone(),
+//!     qas1.clone(),
+//!     qas2.clone(),
+//!     qas3.clone()
+//! ]);
 //!
 //! /// Decrypt the secret with the security questions answers and salts - this
 //! /// works even thought we provided one incorrect answer
@@ -130,13 +145,18 @@
 //!
 //! assert_eq!(decrypted_secret, user_secret);
 //!
-//! /// We can also provide incorrect answer for question 1... or any other question.
+//! /// We can also provide incorrect answer for question 1...or any other question.
 //! let qas1_incorrect = SecurityQuestionAnswerAndSalt::by_answering_freeform(
 //!     q1.clone(),
 //!     |_q, _format| "Incorrect answer for Q1".to_owned()
 //! ).unwrap();
 //!
-//! let qas_q1_incorrect = SecurityQuestionsAnswersAndSalts::<QUESTIONS_COUNT>::from([qas0.clone(), qas1_incorrect.clone(), qas2.clone(), qas3.clone()]);
+//! let qas_q1_incorrect = SecurityQuestionsAnswersAndSalts::<Q>::from([
+//!     qas0.clone(),
+//!     qas1_incorrect.clone(),
+//!     qas2.clone(),
+//!     qas3.clone()
+//! ]);
 //!
 //! /// Also works with second question being incorrectly answered (or any question)
 //! let decrypted_secret = sealed_secret.decrypt(qas_q1_incorrect.clone()).unwrap();
@@ -145,9 +165,56 @@
 //!
 //! /// But since we require at least 3 correct answers, if we answer 2 questions
 //! /// incorrectly, we will not be able to decrypt the secret
-//! let qas_two_incorrect_answers = SecurityQuestionsAnswersAndSalts::<QUESTIONS_COUNT>::from([qas0_incorrect.clone(), qas1_incorrect.clone(), qas2.clone(), qas3.clone()]);
+//! let qas_two_incorrect_answers = SecurityQuestionsAnswersAndSalts::<Q>::from([
+//!     qas0_incorrect.clone(),
+//!     qas1_incorrect.clone(),
+//!     qas2.clone(),
+//!     qas3.clone()
+//! ]);
+//!
+//! /// Attempt to decrypt with two incorrect answers
 //! let decryption_result = sealed_secret.decrypt(qas_two_incorrect_answers);
+//!
+//! /// Will return an error, since we require at least 3 correct answers to correct
 //! assert_eq!(decryption_result, Err(Error::FailedToDecryptSealedSecret));
+//!
+//! /// If you provide answers to completely unrelated questions, an error is
+//! /// thrown
+//! let unrelated_question = SecurityQuestion {
+//!     id: 100,
+//!     version: 1,
+//!     kind: SecurityQuestionKind::Freeform,
+//!     question: "In which city and which year did your parents meet?".to_owned(),
+//!     expected_answer_format: SecurityQuestionExpectedAnswerFormat {
+//!         answer_structure: "<CITY>, <YEAR>".to_owned(),
+//!         example_answer: "London, 1963".to_owned(),
+//!         unsafe_answers: vec![],
+//!     },  
+//! };
+//!
+//! /// Provide some dummy answer to the unrelated question
+//! let answer_to_unrelated_question = SecurityQuestionAnswerAndSalt::by_answering_freeform(
+//!     unrelated_question.clone(),
+//!     |_q, _format| "Madrid, 1955".to_owned()
+//! ).unwrap();
+//!
+//! /// Form array containing the unrelated question (and its answer)
+//! let qas_with_unrelated_question = SecurityQuestionsAnswersAndSalts::<Q>::from([
+//!     qas0.clone(),
+//!     qas1.clone(),
+//!     qas2.clone(),
+//!     answer_to_unrelated_question.clone(),
+//! ]);
+//!
+//! /// Attempt to decrypt with the unrelated question
+//! let decryption_result = sealed_secret.decrypt(qas_with_unrelated_question);
+//!
+//! /// Will return an error, since the unrelated question is not part of the
+//! /// security questions
+//! assert_eq!(
+//!     decryption_result,
+//!     Err(Error::UnrelatedQuestionProvided { question: unrelated_question.to_string() })
+//! );
 
 mod encryption;
 mod kdf;

@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
-/// A set of encryption keys of length N choose M, where N is the number of security questions
-/// and M is the minimum number of correct answers required to decrypt a secret.
+/// A set of encryption keys of length N choose M, where N is the number of
+/// security questions and M is the minimum number of correct answers required
+/// to decrypt a secret.
 #[derive(Clone, PartialEq, Eq, derive_more::Debug, derive_more::Display)]
 #[display("EncryptionKeys({})", self.0.len())]
 pub struct EncryptionKeys<

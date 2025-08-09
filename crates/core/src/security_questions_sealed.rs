@@ -18,16 +18,16 @@ pub struct SecurityQuestionsSealed<
     /// used to encrypt the secret.
     pub security_questions: SecurityQuestions,
 
-    /// A versioned Key Derivation Function (KDF) algorithm used to produce a set
-    /// of Encryption keys from a set of security questions and answers
+    /// A versioned Key Derivation Function (KDF) algorithm used to produce a
+    /// set of Encryption keys from a set of security questions and answers
     pub kdf_scheme: SecurityQuestionsKdfScheme,
 
     /// The scheme used to encrypt the Security Questions factor source
     /// secret using one combination of answers to questions, one of many.
     pub encryption_scheme: EncryptionScheme,
 
-    /// The N many encryptions of the secret, where N corresponds to the number of derived keys
-    /// from the `keyDerivationScheme`
+    /// The N many encryptions of the secret, where N corresponds to the number
+    /// of derived keys from the `keyDerivationScheme`
     pub encryptions: IndexSet<HexBytes>,
 }
 
@@ -38,8 +38,8 @@ impl<
 > SecurityQuestionsSealed<Secret, QUESTION_COUNT, MIN_CORRECT_ANSWERS>
 {
     /// Creates a new sealed secret by encrypting the provided secret with the
-    /// provided security questions, answers and salts, using the provided KDF scheme
-    /// and encryption scheme.
+    /// provided security questions, answers and salts, using the provided KDF
+    /// scheme and encryption scheme.
     pub fn seal(
         secret: Secret,
         with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
@@ -53,8 +53,8 @@ impl<
     }
 
     /// Creates a new sealed secret by encrypting the provided secret with the
-    /// provided security questions, answers and salts, using the provided KDF scheme
-    /// and encryption scheme.
+    /// provided security questions, answers and salts, using the provided KDF
+    /// scheme and encryption scheme.
     pub fn with_schemes(
         secret: Secret,
         with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
@@ -97,7 +97,8 @@ impl<
             .map(HexBytes::from)
             .collect::<IndexSet<HexBytes>>();
 
-        // Create the sealed secret with the security questions, encryptions, KDF scheme and encryption scheme
+        // Create the sealed secret with the security questions, encryptions,
+        // KDF scheme and encryption scheme
         let sealed = Self {
             phantom: std::marker::PhantomData,
             security_questions,
@@ -109,11 +110,30 @@ impl<
         Ok(sealed)
     }
 
+    fn are_all_answers_relevant(
+        &self,
+        answers_to_question: &SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
+    ) -> Result<()> {
+        let irrelevant_question = answers_to_question
+            .iter()
+            .find(|qa| !self.security_questions.contains(&qa.question));
+
+        if let Some(qa) = irrelevant_question {
+            return Err(Error::UnrelatedQuestionProvided {
+                question: qa.question.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
     pub fn decrypt(
         &self,
         with: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
     ) -> Result<Secret> {
         let answers_to_question = with;
+
+        self.are_all_answers_relevant(&answers_to_question)?;
 
         let decryption_keys = self
             .kdf_scheme
@@ -129,7 +149,8 @@ impl<
                         return Ok(secret);
                     }
                 }
-                // Else continue to the next encrypted/decryption_key combination
+                // Else continue to the next encrypted/decryption_key
+                // combination
             }
         }
 

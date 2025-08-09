@@ -59,7 +59,6 @@ impl SecurityQuestion {
     /// [Suggested question by NordVPN][link].
     ///
     /// [link]: https://nordvpn.com/blog/security-questions/
-    ///
     pub fn failed_exam() -> Self {
         Self::freeform_with_id(
             0,
@@ -80,7 +79,6 @@ impl SecurityQuestion {
     /// [Suggested question by NordVPN][link].
     ///
     /// [link]: https://nordvpn.com/blog/security-questions/
-    ///
     pub fn parents_met() -> Self {
         Self::freeform_with_id(
             1,
@@ -113,7 +111,6 @@ impl SecurityQuestion {
     /// [Suggested question by NordVPN][link].
     ///
     /// [link]: https://nordvpn.com/blog/security-questions/
-    ///
     pub fn first_kiss_whom() -> Self {
         Self::freeform_with_id(
             3,
@@ -131,7 +128,6 @@ impl SecurityQuestion {
     /// [Suggested question by NordVPN][link].
     ///
     /// [link]: https://nordvpn.com/blog/security-questions/
-    ///
     pub fn first_kiss_location() -> Self {
         Self::freeform_with_id(
             4,
@@ -166,7 +162,6 @@ impl SecurityQuestion {
     /// [Suggested question by NordVPN][link].
     ///
     /// [link]: https://nordvpn.com/blog/security-questions/
-    ///
     pub fn child_middle_name() -> Self {
         Self::freeform_with_id(
             6,

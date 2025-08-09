@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
-/// The cipher of an AES GCM encryption alongside the nonce used. The cipher contains
-/// the encrypted payload and the authentication tag.
+/// The cipher of an AES GCM encryption alongside the nonce used. The cipher
+/// contains the encrypted payload and the authentication tag.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct AesGcmSealedBox {
     /// Nonce is 12 bytes

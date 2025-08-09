@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
-/// The KDF algorithm used to derive the decryption key from a combination of answers to security questions.
+/// The KDF algorithm used to derive the decryption key from a combination of
+/// answers to security questions.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum SecurityQuestionsKdfScheme {
     /// First iteration of KDF for SecurityQuestions

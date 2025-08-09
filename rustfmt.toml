@@ -1,1 +1,5 @@
 max_width = 80
+
+# REQUIRES NIGHTLY, use `cargo +nightly fmt` to format
+wrap_comments = true
+format_code_in_doc_comments = true

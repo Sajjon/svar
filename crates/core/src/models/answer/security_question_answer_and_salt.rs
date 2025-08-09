@@ -14,9 +14,11 @@ pub struct SecurityQuestionAnswerAndSalt {
 }
 
 impl SecurityQuestionAnswerAndSalt {
-    /// Creates a new `SecurityQuestionAnswerAndSalt` by answering a freeform question.
+    /// Creates a new `SecurityQuestionAnswerAndSalt` by answering a freeform
+    /// question.
     ///
-    /// A salt is generated from a cryptographically secure random number generator.
+    /// A salt is generated from a cryptographically secure random number
+    /// generator.
     ///
     /// # Errors
     /// Returns an error if the question is not of kind `Freeform`.
