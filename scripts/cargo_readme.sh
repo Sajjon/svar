@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check for --check flag
+CHECK_MODE=false
+if [ "$1" = "--check" ]; then
+  CHECK_MODE=true
+fi
+
 # Generate the new README content
 new_readme=$(cargo readme -r crates/core -t cargo_readme_template.tpl)
 
@@ -11,7 +17,9 @@ else
 fi
 
 if [ "$new_readme" != "$old_readme" ]; then
-  echo "$new_readme" > crates/core/README.md
+  if ! $CHECK_MODE; then
+    echo "$new_readme" > crates/core/README.md
+  fi
   echo "README.md was changed. Overwritten with new content." >&2
   exit 1
 else

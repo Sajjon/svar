@@ -56,6 +56,19 @@ jobs:
       - name: Clippy Check
         run: cargo clippy --all
 
+  readme-check:
+    name: Check README is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cargo-readme if needed
+        run: |
+          if ! cargo-readme --version >/dev/null 2>&1; then
+            cargo install cargo-readme
+          fi
+      - name: Check README
+        run: scripts/cargo_readme.sh --check
+
   # Rust unit, doc and integration
   test-rust:
     runs-on: ubuntu-latest
