@@ -149,4 +149,5 @@ let decryption_result = sealed_secret.decrypt(qas_two_incorrect_answers);
 assert_eq!(decryption_result, Err(Error::FailedToDecryptSealedSecret));
 
 # Etymology
+
 The noun "svar" is 🇸🇪 Swedish for "answer".
