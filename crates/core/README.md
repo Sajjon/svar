@@ -9,7 +9,7 @@ in applications willing to trade off some security for usability. The reason
 for this is that it is hard to reach a high level of entropy (security) with
 the proposed number of questions and answers.
 
-Furthermore, an adversary who knows the victim (close friend or family) might know the answers to some of the questions.
+Furthermore, an adversary who knows the victim (close friend or a family member) might know the answers to some of the questions.
 
 ```rust
 extern crate svar_core;
