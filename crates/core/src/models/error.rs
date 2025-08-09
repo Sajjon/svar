@@ -5,6 +5,9 @@ pub enum Error {
     #[error("Invalid questions and answers count: expected {expected}, found {found}")]
     InvalidQuestionsAndAnswersCount { expected: usize, found: usize },
 
+    #[error("Questions must be greater than or equal to answers: {questions} < {answers}")]
+    QuestionsMustBeGreaterThanOrEqualAnswers { questions: usize, answers: usize },
+
     #[error("Invalid byte count: expected {expected}, found {found}")]
     InvalidByteCount { expected: usize, found: usize },
 

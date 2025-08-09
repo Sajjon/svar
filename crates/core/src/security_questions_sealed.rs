@@ -99,7 +99,7 @@ impl<Secret: IsSecret, const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: u
             .kdf_scheme
             .derive_encryption_keys_from_questions_answers_and_salts::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(answers_to_question)?;
 
-        for decryption_key in decryption_keys {
+        for decryption_key in decryption_keys.into_iter() {
             for encrypted in self.encryptions.iter() {
                 if let Ok(decrypted_bytes) = self
                     .encryption_scheme

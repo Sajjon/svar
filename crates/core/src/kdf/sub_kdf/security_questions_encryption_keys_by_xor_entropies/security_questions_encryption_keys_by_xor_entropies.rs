@@ -10,7 +10,7 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
     >(
         &self,
         entropies: [Exactly32Bytes; QUESTION_COUNT],
-    ) -> Vec<EncryptionKey> {
+    ) -> Result<EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>> {
         let size = MIN_CORRECT_ANSWERS;
 
         let key_from_combination_by_xor = |combination: Vec<&Exactly32Bytes>| -> EncryptionKey {
@@ -24,10 +24,12 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
 
         let combinations = entropies.iter().combinations(size);
 
-        combinations
+        let keys = combinations
             .into_iter()
             .map(|combination| key_from_combination_by_xor(combination))
-            .collect()
+            .collect::<IndexSet<EncryptionKey>>();
+
+        EncryptionKeys::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>::new(keys)
     }
 
     pub fn derive_encryption_keys_from<
@@ -36,7 +38,7 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
     >(
         &self,
         entropies: [Exactly32Bytes; QUESTION_COUNT],
-    ) -> Vec<EncryptionKey> {
+    ) -> Result<EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>> {
         assert!(QUESTION_COUNT >= MIN_CORRECT_ANSWERS);
         self.encryption_keys_from_xor_between_all_combinations::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(entropies)
     }

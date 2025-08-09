@@ -20,7 +20,7 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKdfScheme {
     >(
         &self,
         questions_answers_and_salts: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
-    ) -> Result<Vec<EncryptionKey>> {
+    ) -> Result<EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>> {
         match self {
             Self::Version1(kdf) => kdf.derive_encryption_keys_from_questions_answers_and_salts::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(
                 questions_answers_and_salts,
@@ -56,7 +56,7 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKDFSchemeVersion1 {
     >(
         &self,
         questions_answers_and_salts: SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
-    ) -> Result<Vec<EncryptionKey>> {
+    ) -> Result<EncryptionKeys<QUESTION_COUNT, MIN_CORRECT_ANSWERS>> {
         let enropies_from_qas = &self.entropies_from_questions_answer_and_salt;
         let encryption_keys_kdf = &self.kdf_encryption_keys_from_key_exchange_keys;
 
@@ -74,8 +74,8 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKDFSchemeVersion1 {
                     found: len,
                 })?;
 
-        Ok(encryption_keys_kdf
-            .derive_encryption_keys_from::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(entropies))
+        encryption_keys_kdf
+            .derive_encryption_keys_from::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>(entropies)
     }
 }
 
