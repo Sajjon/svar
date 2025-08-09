@@ -67,7 +67,7 @@ impl Default for EncryptionScheme {
 
 impl VersionedEncryption for EncryptionScheme {
     /// Encrypts `plaintext` using `encryption_key` using
-    /// the `self` `EncryptionScheme`, returning the cipher text as Vec<u8>.
+    /// the `self` `EncryptionScheme`, returning the cipher text as `Vec<u8>`.
     fn encrypt(&self, plaintext: impl AsRef<[u8]>, encryption_key: EncryptionKey) -> Vec<u8> {
         match self {
             EncryptionScheme::Version1(scheme) => scheme.encrypt(plaintext, encryption_key),

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-/// A wrapper for Vec<u8> that serializes as hex string
+/// A wrapper for `Vec<u8>` that serializes as hex string
 #[derive(
     Clone,
     PartialEq,
