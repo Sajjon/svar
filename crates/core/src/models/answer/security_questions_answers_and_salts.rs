@@ -1,12 +1,5 @@
 use crate::prelude::*;
 
-use serde::{
-    Deserialize, Deserializer, Serialize, Serializer,
-    de::{SeqAccess, Visitor},
-    ser::SerializeSeq,
-};
-use std::fmt;
-
 #[derive(
     Clone,
     PartialEq,
@@ -40,64 +33,6 @@ impl<const QUESTION_COUNT: usize>
             })?;
 
         Ok(Self(arr))
-    }
-}
-
-impl<const QUESTION_COUNT: usize> Serialize
-    for SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(QUESTION_COUNT))?;
-        for item in &self.0 {
-            seq.serialize_element(item)?;
-        }
-        seq.end()
-    }
-}
-
-impl<'de, const QUESTION_COUNT: usize> Deserialize<'de>
-    for SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct ArrayVisitor<const N: usize>;
-
-        impl<'de, const N: usize> Visitor<'de> for ArrayVisitor<N> {
-            type Value = [SecurityQuestionAnswerAndSalt; N];
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "an array of length {}", N)
-            }
-
-            fn visit_seq<A>(
-                self,
-                mut seq: A,
-            ) -> Result<[SecurityQuestionAnswerAndSalt; N], A::Error>
-            where
-                A: SeqAccess<'de>,
-            {
-                let mut items = Vec::with_capacity(N);
-
-                while let Some(item) = seq.next_element()? {
-                    items.push(item);
-                }
-
-                SecurityQuestionsAnswersAndSalts::try_from_iter(items)
-                    .map(|s| s.0)
-                    .map_err(serde::de::Error::custom)
-            }
-        }
-
-        let arr = deserializer.deserialize_tuple(
-            QUESTION_COUNT,
-            ArrayVisitor::<QUESTION_COUNT>,
-        )?;
-        Ok(SecurityQuestionsAnswersAndSalts(arr))
     }
 }
 
@@ -176,19 +111,5 @@ impl HasSampleValues for SecurityQuestionsAnswersAndSalts<6> {
             },
         ])
         .expect("Should have been 6 questions and answers")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use insta::assert_json_snapshot;
-
-    use super::*;
-
-    type Sut = SecurityQuestionsAnswersAndSalts<6>;
-
-    #[test]
-    fn serialize() {
-        assert_json_snapshot!(Sut::sample());
     }
 }

@@ -14,9 +14,9 @@ pub struct SecurityQuestionsSealed<
     #[serde(skip)]
     phantom: std::marker::PhantomData<Secret>,
 
-    /// The security questions used to derive the keys
-    /// used to encrypt the secret.
-    pub security_questions: SecurityQuestions,
+    /// The security questions used to derive the keys used to encrypt the
+    /// secret.
+    pub security_questions_and_salts: SecurityQuestionsAndSalts<QUESTION_COUNT>,
 
     /// A versioned Key Derivation Function (KDF) algorithm used to produce a
     /// set of Encryption keys from a set of security questions and answers
@@ -73,10 +73,15 @@ impl<
 
         // Clone the security questions from the answers and salts, we need to
         // store them in the sealed secret
-        let security_questions = questions_answers_and_salts
+        let security_questions_and_salts = questions_answers_and_salts
             .iter()
-            .map(|qa| qa.question.clone())
-            .collect::<SecurityQuestions>();
+            .map(|qa| qa.question_and_salt())
+            .collect::<IndexSet<SecurityQuestionAndSalt>>();
+
+        let security_questions_and_salts =
+            SecurityQuestionsAndSalts::<QUESTION_COUNT>::try_from_iter(
+                security_questions_and_salts,
+            )?;
 
         // Derive the encryption keys from the questions, answers and salts
         let encryption_keys = kdf_scheme
@@ -101,7 +106,7 @@ impl<
         // KDF scheme and encryption scheme
         let sealed = Self {
             phantom: std::marker::PhantomData,
-            security_questions,
+            security_questions_and_salts,
             encryptions,
             kdf_scheme,
             encryption_scheme,
@@ -114,9 +119,12 @@ impl<
         &self,
         answers_to_question: &SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>,
     ) -> Result<()> {
-        let irrelevant_question = answers_to_question
-            .iter()
-            .find(|qa| !self.security_questions.contains(&qa.question));
+        let irrelevant_question = answers_to_question.iter().find(|qa| {
+            !self
+                .security_questions_and_salts
+                .iter()
+                .any(|saved| saved.question == qa.question)
+        });
 
         if let Some(qa) = irrelevant_question {
             return Err(Error::UnrelatedQuestionProvided {
@@ -159,7 +167,7 @@ impl<
     }
 }
 
-impl HasSampleValues for SecurityQuestionsSealed<String, 6, 3> {
+impl HasSampleValues for SecurityQuestionsSealed<String, 6, 41> {
     fn sample() -> Self {
         let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
 

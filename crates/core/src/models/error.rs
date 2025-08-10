@@ -10,6 +10,11 @@ pub enum Error {
     InvalidQuestionsAndAnswersCount { expected: usize, found: usize },
 
     #[error(
+        "Invalid questions and salt count: expected {expected}, found {found}"
+    )]
+    InvalidQuestionsAndSaltCount { expected: usize, found: usize },
+
+    #[error(
         "You provided an answer for a question that is not part of the security questions: {question}"
     )]
     UnrelatedQuestionProvided { question: String },

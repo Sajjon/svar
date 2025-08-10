@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-/// A pair of security question and answer
+/// A tuple of security question, answer and salt
 #[derive(
     Serialize, Display, Deserialize, Clone, PartialEq, Eq, Hash, Debug,
 )]
@@ -44,6 +44,15 @@ impl SecurityQuestionAnswerAndSalt {
             answer,
             salt: Exactly32Bytes::generate(),
         })
+    }
+}
+
+impl SecurityQuestionAnswerAndSalt {
+    pub fn question_and_salt(&self) -> SecurityQuestionAndSalt {
+        SecurityQuestionAndSalt {
+            question: self.question.clone(),
+            salt: self.salt,
+        }
     }
 }
 

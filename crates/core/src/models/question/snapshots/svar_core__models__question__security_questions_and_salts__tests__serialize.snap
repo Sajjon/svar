@@ -1,5 +1,5 @@
 ---
-source: crates/core/src/models/answer/security_questions_answers_and_salts.rs
+source: crates/core/src/models/question/security_questions_and_salts.rs
 expression: "Sut::sample()"
 ---
 [
@@ -15,7 +15,6 @@ expression: "Sut::sample()"
         "unsafe_answers": []
       }
     },
-    "answer": "MIT, year 4, Python",
     "salt": "acedacedacedacedacedacedacedacedacedacedacedacedacedacedacedaced"
   },
   {
@@ -30,7 +29,6 @@ expression: "Sut::sample()"
         "unsafe_answers": []
       }
     },
-    "answer": "London, 1973",
     "salt": "babebabebabebabebabebabebabebabebabebabebabebabebabebabebabebabe"
   },
   {
@@ -45,7 +43,6 @@ expression: "Sut::sample()"
         "unsafe_answers": []
       }
     },
-    "answer": "Jean-Michel Jarre, Paris La Défense, 1990",
     "salt": "cafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafe"
   },
   {
@@ -60,7 +57,6 @@ expression: "Sut::sample()"
         "unsafe_answers": []
       }
     },
-    "answer": "John Doe",
     "salt": "deaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddead"
   },
   {
@@ -77,7 +73,6 @@ expression: "Sut::sample()"
         ]
       }
     },
-    "answer": "Behind the shed in the oak tree forrest.",
     "salt": "ecadecadecadecadecadecadecadecadecadecadecadecadecadecadecadecad"
   },
   {
@@ -92,7 +87,6 @@ expression: "Sut::sample()"
         "unsafe_answers": []
       }
     },
-    "answer": "Tokyo, 1989",
     "salt": "fadefadefadefadefadefadefadefadefadefadefadefadefadefadefadefade"
   }
 ]
