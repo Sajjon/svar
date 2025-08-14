@@ -20,3 +20,5 @@ dirs-next = "2.0.0"
 fern = "0.7.1"
 inquire = "0.7.5"
 log.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

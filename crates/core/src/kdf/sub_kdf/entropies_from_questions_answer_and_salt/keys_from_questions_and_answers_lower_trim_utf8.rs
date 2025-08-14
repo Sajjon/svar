@@ -28,6 +28,7 @@ pub(crate) const SECURITY_QUESTIONS_TRIMMED_CHARS: &[char] = &[
     ' ',  // whitespace
     '\t', // whitespace
     '\n', // whitespace
+    ',',  // Comma, rationale: carries no meaning in an answer
     '.',  /* Rationale: Might be natural for some to end answers with a dot,
            * but at a later point in time might be omitted. */
     '!', // Rationale: Same as dot

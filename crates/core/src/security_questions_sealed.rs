@@ -167,7 +167,7 @@ impl<
     }
 }
 
-impl HasSampleValues for SecurityQuestionsSealed<String, 6, 41> {
+impl HasSampleValues for SecurityQuestionsSealed<String, 6, 4> {
     fn sample() -> Self {
         let mnemonic = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
 

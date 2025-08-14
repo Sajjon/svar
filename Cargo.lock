@@ -1239,7 +1239,9 @@ dependencies = [
  "fern",
  "inquire",
  "log",
+ "serde_json",
  "svar-core",
+ "thiserror 2.0.12",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-# Svar
+# svar-core
 
 A user-friendly encryption scheme using Security Questions and their answers
 to protect some secret, allowing for user to later incorrectly answer some
@@ -221,6 +221,10 @@ You can now store the `sealed_secret` in a database or a file, it need not
 be encrypted further, as it is already encrypted with the answers to the
 security questions. However, since the users questions are part of the
 sealed secret, you should not store the sealed secret in a public place.
+
+## Example program
+See [README of the `cli` crate](https://github.com/Sajjon/svar/blob/main/crates/cli/README.md) for an example program that uses this crate
+to seal and decrypt a secret using security questions and answers.
 
 # Etymology
 

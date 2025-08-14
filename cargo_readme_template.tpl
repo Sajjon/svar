@@ -1,4 +1,4 @@
-# Svar
+# {{crate}}
 
 {{readme}}
 

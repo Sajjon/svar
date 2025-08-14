@@ -66,8 +66,10 @@ jobs:
           if ! cargo-readme --version >/dev/null 2>&1; then
             cargo install cargo-readme
           fi
-      - name: Check README
-        run: scripts/cargo_readme.sh --check
+      - name: Check Core README
+        run: scripts/cargo_readme.sh core --check
+      - name: Check CLI README
+        run: scripts/cargo_readme.sh cli --check
 
   # Rust unit, doc and integration
   test-rust:

@@ -33,7 +33,11 @@ repos:
         types: [file, rust]
         entry: cargo nextest run --all
         pass_filenames: false
-      - id: cargo readme
-        name: cargo readme
+      - id: cargo core readme
+        name: cargo core readme
         language: system
-        entry: scripts/run_cargo_readme_install_if_needed.sh
+        entry: scripts/run_cargo_readme_install_if_needed.sh core
+      - id: cargo cli readme
+        name: cargo cli readme
+        language: system
+        entry: scripts/run_cargo_readme_install_if_needed.sh cli
