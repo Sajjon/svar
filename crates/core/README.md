@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/Sajjon/svar/graph/badge.svg?token=J1hjUUQDtR)](https://codecov.io/gh/Sajjon/svar)
+
 # svar-core
 
 A user-friendly encryption scheme using Security Questions and their answers
@@ -11,6 +13,14 @@ the proposed number of questions and answers.
 
 Furthermore, an adversary who knows the victim (close friend or family
 member) might know the answers to some of the questions.
+
+We use the term "secret" to refer to the data that is protected using
+security questions and answers. And we called the protected data
+"sealed secret". The mechanism by which we protect the secret is
+called "seal" and the process of obtain the sealed secret is called "open".
+
+There are aliases for `seal` and `open` methods, namely `encrypt` and
+`decrypt` for discoverability purposes. Consider these terms synonymous.
 
 ```rust
 extern crate svar_core;
@@ -141,7 +151,7 @@ let qas_q0_incorrect = SecurityQuestionsAnswersAndSalts::<Q>::from([
 
 /// Decrypt the secret with the security questions answers and salts - this
 /// works even thought we provided one incorrect answer
-let decrypted_secret = sealed_secret.decrypt(qas_q0_incorrect).unwrap();
+let decrypted_secret = sealed_secret.open(qas_q0_incorrect).unwrap();
 
 assert_eq!(decrypted_secret, user_secret);
 
@@ -159,7 +169,7 @@ let qas_q1_incorrect = SecurityQuestionsAnswersAndSalts::<Q>::from([
 ]);
 
 /// Also works with second question being incorrectly answered (or any question)
-let decrypted_secret = sealed_secret.decrypt(qas_q1_incorrect.clone()).unwrap();
+let decrypted_secret = sealed_secret.open(qas_q1_incorrect.clone()).unwrap();
 
 assert_eq!(decrypted_secret, user_secret);
 
@@ -173,7 +183,7 @@ let qas_two_incorrect_answers = SecurityQuestionsAnswersAndSalts::<Q>::from([
 ]);
 
 /// Attempt to decrypt with two incorrect answers
-let decryption_result = sealed_secret.decrypt(qas_two_incorrect_answers);
+let decryption_result = sealed_secret.open(qas_two_incorrect_answers);
 
 /// Will return an error, since we require at least 3 correct answers to correct
 assert_eq!(decryption_result, Err(Error::FailedToDecryptSealedSecret));
@@ -207,7 +217,7 @@ let qas_with_unrelated_question = SecurityQuestionsAnswersAndSalts::<Q>::from([
 ]);
 
 /// Attempt to decrypt with the unrelated question
-let decryption_result = sealed_secret.decrypt(qas_with_unrelated_question);
+let decryption_result = sealed_secret.open(qas_with_unrelated_question);
 
 /// Will return an error, since the unrelated question is not part of the
 /// security questions

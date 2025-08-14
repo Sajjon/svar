@@ -45,12 +45,30 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
     }
 }
 
-impl HasSampleValues for SecurityQuestionsEncryptionKeysByXorEntropies {
-    fn sample() -> Self {
-        Self
-    }
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    fn sample_other() -> Self {
-        Self
+    type Sut = SecurityQuestionsEncryptionKeysByXorEntropies;
+
+    #[test]
+    fn derive_encryption_keys_from_order_does_not_matter() {
+        let sut: Sut = SecurityQuestionsEncryptionKeysByXorEntropies;
+        let entropies = [
+            Exactly32Bytes::sample_aced(),
+            Exactly32Bytes::sample_babe(),
+            Exactly32Bytes::sample_cafe(),
+        ];
+
+        let keys1 = sut.derive_encryption_keys_from::<3, 2>(entropies).unwrap();
+        let keys2 = sut
+            .derive_encryption_keys_from::<3, 2>([
+                entropies[2],
+                entropies[0],
+                entropies[1],
+            ])
+            .unwrap();
+
+        assert_eq!(keys1, keys2);
     }
 }

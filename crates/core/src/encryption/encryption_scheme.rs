@@ -2,23 +2,134 @@ use serde::{Deserializer, Serializer, de, ser::SerializeStruct};
 
 use crate::prelude::*;
 
-/// A versioned encryption scheme.
+/// A versioned encryption scheme for secure data encryption.
+///
+/// This enum represents different encryption algorithms and their versions that
+/// can be used to encrypt and decrypt sensitive data. The versioning allows for
+/// algorithm upgrades while maintaining backwards compatibility with older
+/// encrypted data.
+///
+/// Currently, only AES-256-GCM is supported, but the versioned design allows
+/// for future algorithm additions without breaking existing implementations.
+///
+/// # Supported Algorithms
+///
+/// - **Version 1**: AES-256-GCM with 96-bit IV and 128-bit authentication tag
+///
+/// # Examples
+///
+/// ## Basic Usage
+///
+/// ```
+/// use svar_core::*;
+///
+/// let scheme = EncryptionScheme::default();
+/// let key = EncryptionKey::generate();
+/// let plaintext = b"Hello, World!";
+///
+/// let encrypted = scheme.encrypt(plaintext, key.clone());
+/// let decrypted = scheme.decrypt(&encrypted, key)?;
+///
+/// assert_eq!(plaintext, &decrypted[..]);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// ## Explicit Version Selection
+///
+/// ```
+/// use svar_core::*;
+///
+/// let scheme_v1 = EncryptionScheme::version1();
+/// assert_eq!(scheme_v1.version(), EncryptionSchemeVersion::Version1);
+/// ```
+///
+/// ## Version Comparison
+///
+/// ```
+/// use svar_core::*;
+///
+/// let scheme1 = EncryptionScheme::version1();
+/// let scheme2 = EncryptionScheme::default();
+///
+/// assert_eq!(scheme1, scheme2); // Default is currently version 1
+/// assert_eq!(scheme1.version(), scheme2.version());
+/// ```
+///
+/// # Serialization
+///
+/// The scheme serializes with version information for proper deserialization:
+///
+/// ```
+/// use svar_core::*;
+///
+/// let scheme = EncryptionScheme::default();
+/// let json = serde_json::to_string(&scheme)?;
+///
+/// // JSON contains version information
+/// assert!(json.contains("version"));
+/// assert!(json.contains("description"));
+///
+/// let restored: EncryptionScheme = serde_json::from_str(&json)?;
+/// assert_eq!(scheme, restored);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Algorithm Details
+///
+/// ## AES-256-GCM (Version 1)
+/// - **Key Size**: 256 bits (32 bytes)
+/// - **IV Size**: 96 bits (12 bytes) - randomly generated per encryption
+/// - **Tag Size**: 128 bits (16 bytes) - provides authentication
+/// - **Security**: Provides both confidentiality and authenticity
+/// - **Performance**: Hardware-accelerated on most modern processors
+///
+/// # Security Considerations
+///
+/// - Each encryption operation uses a fresh random IV
+/// - Authentication tag prevents tampering and ensures data integrity
+/// - Keys should be derived using strong key derivation functions
+/// - Never reuse IV with the same key (automatically prevented)
+///
+/// # Future Extensibility
+///
+/// The versioned design allows for:
+/// - Algorithm upgrades (e.g., post-quantum cryptography)
+/// - Parameter changes (e.g., larger key sizes)
+/// - New authentication modes
+/// - Backwards compatibility with existing encrypted data
 #[derive(Clone, PartialEq, Eq, Hash, derive_more::Debug)]
 pub enum EncryptionScheme {
-    /// AES GCM 256 encryption
+    /// AES-256-GCM encryption (Version 1).
+    ///
+    /// Uses AES in Galois/Counter Mode with:
+    /// - 256-bit key size for strong security
+    /// - 96-bit initialization vector (IV)
+    /// - 128-bit authentication tag
+    /// - AEAD (Authenticated Encryption with Associated Data) properties
     Version1(AesGcm256),
 }
 
-impl HasSampleValues for EncryptionScheme {
-    fn sample() -> Self {
-        Self::version1()
-    }
-
-    fn sample_other() -> Self {
-        Self::version1()
-    }
-}
-
+/// Display implementation for `EncryptionScheme`.
+///
+/// Formats the encryption scheme with its version and description for
+/// human-readable output.
+///
+/// # Format
+///
+/// `EncryptionScheme: {version} ({description})`
+///
+/// # Examples
+///
+/// ```
+/// use svar_core::*;
+///
+/// let scheme = EncryptionScheme::default();
+/// let display = format!("{}", scheme);
+///
+/// // Example output format
+/// assert!(display.starts_with("EncryptionScheme:"));
+/// assert!(display.contains("Version1"));
+/// ```
 impl std::fmt::Display for EncryptionScheme {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -56,11 +167,66 @@ impl<'de> Deserialize<'de> for EncryptionScheme {
 }
 
 impl EncryptionScheme {
+    /// Creates a Version 1 encryption scheme using AES-256-GCM.
+    ///
+    /// This method explicitly creates a Version 1 encryption scheme, which uses
+    /// AES-256-GCM for authenticated encryption. This is currently the only
+    /// supported version but is explicitly versioned for future extensibility.
+    ///
+    /// # Returns
+    ///
+    /// A new `EncryptionScheme::Version1` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use svar_core::*;
+    ///
+    /// let scheme = EncryptionScheme::version1();
+    /// assert_eq!(scheme.version(), EncryptionSchemeVersion::Version1);
+    ///
+    /// // Can be used for encryption
+    /// let key = EncryptionKey::generate();
+    /// let encrypted = scheme.encrypt(b"test data", key.clone());
+    /// assert!(!encrypted.is_empty());
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// # Algorithm Details
+    ///
+    /// Version 1 uses AES-256-GCM with:
+    /// - 256-bit (32-byte) encryption key
+    /// - 96-bit (12-byte) initialization vector per encryption
+    /// - 128-bit (16-byte) authentication tag
+    /// - Authenticated Encryption with Associated Data (AEAD)
     pub fn version1() -> Self {
         Self::Version1(AesGcm256)
     }
 }
 
+/// Default implementation for `EncryptionScheme`.
+///
+/// Returns the current recommended encryption scheme, which is Version 1
+/// (AES-256-GCM). This provides a stable default while allowing for future
+/// algorithm upgrades.
+///
+/// # Examples
+///
+/// ```
+/// use svar_core::*;
+///
+/// let default_scheme = EncryptionScheme::default();
+/// let explicit_v1 = EncryptionScheme::version1();
+///
+/// assert_eq!(default_scheme, explicit_v1);
+/// assert_eq!(default_scheme.version(), EncryptionSchemeVersion::Version1);
+/// ```
+///
+/// # Stability
+///
+/// The default may change in future versions as new algorithms are added,
+/// but existing encrypted data will remain decryptable using the appropriate
+/// versioned scheme.
 impl Default for EncryptionScheme {
     fn default() -> Self {
         Self::version1()

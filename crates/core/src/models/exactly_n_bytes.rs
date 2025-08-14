@@ -122,16 +122,11 @@ impl<const N: usize> HasSampleValues for ExactlyNBytes<N> {
 
 impl<const N: usize> ExactlyNBytes<N> {
     fn declare_sample(r: &str) -> Self {
-        let mut s = r.repeat(N / 2).to_owned();
-
+        let mut s = r.repeat(N).to_owned();
         let target_len = N * 2;
 
         if s.len() != target_len {
-            let bc = format!("{}", N);
-            let bc_len = bc.len();
-            let subs = &s[0..target_len - bc_len];
-            s = format!("{}{}", bc, subs);
-            assert_eq!(s.len(), target_len);
+            s.truncate(target_len);
         }
         Self::from_str(&s).expect("Valid sample")
     }
@@ -170,5 +165,69 @@ impl<const N: usize> ExactlyNBytes<N> {
     /// A sample used to facilitate unit tests.
     pub fn sample_fade() -> Self {
         Self::declare_sample("fade")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    type Sut = ExactlyNBytes<8>;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn try_from_wrong_length() {
+        let result: Result<Sut> = Sut::try_from(vec![1, 2, 3]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            Error::InvalidByteCount {
+                expected: 8,
+                found: 3
+            }
+        );
+    }
+
+    #[test]
+    fn declare_sample_wrong_rounded_length() {
+        assert_eq!(Sut::declare_sample("deaddead"), Sut::sample_dead());
+        assert_eq!(Sut::declare_sample("de").to_string(), "dededededededede");
+    }
+
+    #[test]
+    fn from_hex_success() {
+        let hex = "deaddeaddeaddead";
+        let result: Result<Sut> = Sut::from_hex(hex);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Sut::sample_dead());
+    }
+
+    #[test]
+    fn from_hex_invalid() {
+        let hex = "invalidhex";
+        let result: Result<Sut> = Sut::from_hex(hex);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Invalid hex"));
+    }
+
+    #[test]
+    fn xor() {
+        let a = ExactlyNBytes::<1>::from_hex("f0").unwrap();
+        let b = ExactlyNBytes::<1>::from_hex("0f").unwrap();
+        assert_eq!(a.xor(&b), ExactlyNBytes::<1>::from_hex("ff").unwrap());
+        assert_eq!(a.xor(&a), ExactlyNBytes::<1>::from_hex("00").unwrap());
+        assert_eq!(b.xor(&b), ExactlyNBytes::<1>::from_hex("00").unwrap());
+        assert_eq!(a.xor(&b), b.xor(&a)); // commutative
     }
 }

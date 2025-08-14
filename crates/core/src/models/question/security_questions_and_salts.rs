@@ -1,11 +1,8 @@
 use crate::prelude::*;
 
 use serde::{
-    Deserialize, Deserializer, Serialize, Serializer,
-    de::{SeqAccess, Visitor},
-    ser::SerializeSeq,
+    Deserialize, Deserializer, Serialize, Serializer, ser::SerializeSeq,
 };
-use std::fmt;
 
 /// A collection of security questions and their salts, the salts are needed to
 /// derive the encryption keys used to encrypt the secret.
@@ -67,39 +64,9 @@ impl<'de, const QUESTION_COUNT: usize> Deserialize<'de>
     where
         D: Deserializer<'de>,
     {
-        struct ArrayVisitor<const N: usize>;
-
-        impl<'de, const N: usize> Visitor<'de> for ArrayVisitor<N> {
-            type Value = [SecurityQuestionAndSalt; N];
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "an array of length {}", N)
-            }
-
-            fn visit_seq<A>(
-                self,
-                mut seq: A,
-            ) -> Result<[SecurityQuestionAndSalt; N], A::Error>
-            where
-                A: SeqAccess<'de>,
-            {
-                let mut items = Vec::with_capacity(N);
-
-                while let Some(item) = seq.next_element()? {
-                    items.push(item);
-                }
-
-                SecurityQuestionsAndSalts::try_from_iter(items)
-                    .map(|s| s.0)
-                    .map_err(serde::de::Error::custom)
-            }
-        }
-
-        let arr = deserializer.deserialize_tuple(
-            QUESTION_COUNT,
-            ArrayVisitor::<QUESTION_COUNT>,
-        )?;
-        Ok(SecurityQuestionsAndSalts(arr))
+        let items: Vec<SecurityQuestionAndSalt> =
+            Vec::deserialize(deserializer)?;
+        Self::try_from_iter(items).map_err(serde::de::Error::custom)
     }
 }
 
@@ -180,5 +147,108 @@ mod tests {
     #[test]
     fn serialize() {
         assert_json_snapshot!(Sut::sample());
+    }
+
+    #[test]
+    fn json_roundtrip() {
+        let original = Sut::sample();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Sut = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    #[test]
+    fn deserialize_fails_when_wrong_count() {
+        let json = r#"[
+            {
+              "question": {
+                "id": 0,
+                "version": 1,
+                "kind": "Freeform",
+                "question": "What was the first exam you failed",
+                "expected_answer_format": {
+                  "answer_structure": "<SCHOOL>, <SCHOOL_GRADE>, <SUBJECT>",
+                  "example_answer": "MIT, year 4, Python",
+                  "unsafe_answers": []
+                }
+              },
+              "salt": "acedacedacedacedacedacedacedacedacedacedacedacedacedacedacedaced"
+            },
+            {
+              "question": {
+                "id": 1,
+                "version": 1,
+                "kind": "Freeform",
+                "question": "In which city and which year did your parents meet?",
+                "expected_answer_format": {
+                  "answer_structure": "<CITY>, <YEAR>",
+                  "example_answer": "Berlin, 1976",
+                  "unsafe_answers": []
+                }
+              },
+              "salt": "babebabebabebabebabebabebabebabebabebabebabebabebabebabebabebabe"
+            }
+        ]"#;
+
+        let result: Result<Sut, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+        let error_message = result.unwrap_err().to_string();
+        assert!(
+            error_message.contains(
+                "Invalid questions and salt count: expected 6, found 2"
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_success() {
+        let json = r#"[
+            {
+              "question": {
+                "id": 0,
+                "version": 1,
+                "kind": "Freeform",
+                "question": "What was the first exam you failed",
+                "expected_answer_format": {
+                  "answer_structure": "<SCHOOL>, <SCHOOL_GRADE>, <SUBJECT>",
+                  "example_answer": "MIT, year 4, Python",
+                  "unsafe_answers": []
+                }
+              },
+              "salt": "acedacedacedacedacedacedacedacedacedacedacedacedacedacedacedaced"
+            }
+        ]"#;
+        let result: Result<SecurityQuestionsAndSalts<1>, _> =
+            serde_json::from_str(json);
+        assert!(result.is_ok());
+        let security_questions_and_salts = result.unwrap();
+        assert_eq!(security_questions_and_salts.0.len(), 1);
+    }
+
+    #[test]
+    fn try_from_iter_err_wrong_count() {
+        let result = Sut::try_from_iter([
+            SecurityQuestionAndSalt::sample(),
+            SecurityQuestionAndSalt::sample_other(),
+        ]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            Error::InvalidQuestionsAndSaltCount {
+                expected: 6,
+                found: 2
+            }
+        );
+    }
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

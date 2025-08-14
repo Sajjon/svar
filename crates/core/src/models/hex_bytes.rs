@@ -63,4 +63,21 @@ mod tests {
     fn serde() {
         assert_json_snapshot!(Sut::sample());
     }
+
+    #[test]
+    fn from_str_invalid() {
+        let invalid_hex = "not_a_hex_string";
+        assert!(Sut::from_str(invalid_hex).is_err());
+    }
+
+    #[test]
+    fn from_str_valid() {
+        let valid_hex = "deadbeef";
+        let hex_bytes =
+            Sut::from_str(valid_hex).expect("Failed to parse valid hex");
+        assert_eq!(
+            hex_bytes.0,
+            hex_decode(valid_hex).expect("Failed to decode hex")
+        );
+    }
 }

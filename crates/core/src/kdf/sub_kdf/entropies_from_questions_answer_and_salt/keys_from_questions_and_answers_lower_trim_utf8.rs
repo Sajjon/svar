@@ -7,18 +7,6 @@ use sha2::Sha256;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
 
-impl HasSampleValues
-    for SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8
-{
-    fn sample() -> Self {
-        Self
-    }
-
-    fn sample_other() -> Self {
-        Self
-    }
-}
-
 impl Default for SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
     fn default() -> Self {
         Self
@@ -91,5 +79,66 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
         let mut okm = [0u8; 32];
         hkdf.expand(&info, &mut okm).unwrap();
         Ok(Exactly32Bytes::from(okm))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8;
+
+    #[test]
+    fn derive_entropies_from_question_answer_and_salt_is_deterministic() {
+        let first = Sut::default()
+            .derive_entropies_from_question_answer_and_salt(
+                &SecurityQuestionAnswerAndSalt::sample(),
+            )
+            .unwrap();
+        let second = Sut::default()
+            .derive_entropies_from_question_answer_and_salt(
+                &SecurityQuestionAnswerAndSalt::sample(),
+            )
+            .unwrap();
+
+        // deterministic
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn derive_entropies_from_question_answer_and_salt_ignores_white_space() {
+        let first = Sut::default()
+            .derive_entropies_from_question_answer_and_salt(
+                &SecurityQuestionAnswerAndSalt {
+                    question: SecurityQuestion::first_concert(),
+                    answer: "Jean-Michel Jarre, Paris La Défense, 1990"
+                        .to_owned(),
+                    salt: Exactly32Bytes::sample_aced(),
+                },
+            )
+            .unwrap();
+        let second = Sut::default()
+            .derive_entropies_from_question_answer_and_salt(
+                &SecurityQuestionAnswerAndSalt {
+                    question: SecurityQuestion::first_concert(),
+                    answer: "Jean-MichelJarre,ParisLaDéfense,1990".to_owned(),
+                    salt: Exactly32Bytes::sample_aced(),
+                },
+            )
+            .unwrap();
+
+        // ignores whitespace
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn bytes_from_answer_fails_when_empty() {
+        let sut = Sut::default();
+        let result = sut.bytes_from_answer("");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            Error::AnswersToSecurityQuestionsCannotBeEmpty
+        );
     }
 }

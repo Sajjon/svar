@@ -169,7 +169,7 @@ fn open_sealed_secret_at(file_path: impl AsRef<Path>) -> Result<()> {
     )?;
 
     info!("All answers received, now decrypting the sealed secret...");
-    let opened = sealed.decrypt(answers)?;
+    let opened = sealed.open(answers)?;
     info!("Sealed secret decrypted successfully.");
 
     let reveal_secret =

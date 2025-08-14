@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/Sajjon/svar/graph/badge.svg?token=J1hjUUQDtR)](https://codecov.io/gh/Sajjon/svar)
+
 # {{crate}}
 
 {{readme}}

@@ -67,3 +67,22 @@ impl HasSampleValues for SecurityQuestionExpectedAnswerFormat {
         Self::name()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    type Sut = SecurityQuestionExpectedAnswerFormat;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+}

@@ -56,3 +56,40 @@ impl<const QUESTION_COUNT: usize, const MIN_CORRECT_ANSWERS: usize> IntoIterator
         self.0.into_iter()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    type Sut = EncryptionKeys<6, 3>;
+
+    #[test]
+    fn n_chose_m_wrong_order() {
+        let result = n_choose_m::<3, 6>();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            Error::QuestionsMustBeGreaterThanOrEqualAnswers {
+                questions: 3,
+                answers: 6
+            }
+        );
+    }
+
+    #[test]
+    fn new_too_short() {
+        let result = Sut::new(vec![
+            EncryptionKey::sample(),
+            EncryptionKey::sample_other(),
+        ]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            Error::InvalidQuestionsAndAnswersCount {
+                expected: 20, // 6 choose 3
+                found: 2
+            }
+        );
+    }
+}
