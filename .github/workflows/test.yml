@@ -94,14 +94,27 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Generate code coverage
         run: |
           RUST_LOG=trace cargo +nightly tarpaulin --verbose --all-features --workspace --ignore-tests --timeout 120 --out xml
 
+      - name: List coverage artifacts (debug)
+        run: |
+          ls -la
+          ls -la target/tarpaulin || true
+          test -f cobertura.xml && echo "Found cobertura.xml" || (echo "cobertura.xml missing" && exit 1)
+
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v5
         with:
-          token: ${{secrets.CODECOV_TOKEN}} # not required for public repos
+          # If your repo is public and the Codecov GitHub App is installed,
+          # you can omit the token. Keep it here if your repo is private
+          # or if your branch is protected and tokenless uploads are disabled.
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: Sajjon/svar
+          files: |
+            cobertura.xml
           fail_ci_if_error: true
+          verbose: true

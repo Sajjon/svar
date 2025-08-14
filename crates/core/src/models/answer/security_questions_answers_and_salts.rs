@@ -36,6 +36,47 @@ impl<const QUESTION_COUNT: usize>
     }
 }
 
+#[cfg(test)]
+impl SecurityQuestionsAnswersAndSalts<6> {
+    pub(crate) fn sample_wrong_answers() -> Self {
+        type Q = SecurityQuestion;
+        type QA = SecurityQuestionAnswerAndSalt;
+        Self::try_from_iter([
+            QA {
+                question: Q::failed_exam(),
+                answer: "Wrong answer".to_owned(),
+                salt: Exactly32Bytes::sample_aced(),
+            },
+            QA {
+                question: Q::parents_met(),
+                answer: "Wrong answer".to_owned(),
+                salt: Exactly32Bytes::sample_babe(),
+            },
+            QA {
+                question: Q::first_concert(),
+                answer: "Wrong answer".to_owned(),
+                salt: Exactly32Bytes::sample_cafe(),
+            },
+            QA {
+                question: Q::first_kiss_whom(),
+                answer: "Wrong answer".to_owned(),
+                salt: Exactly32Bytes::sample_dead(),
+            },
+            QA {
+                question: Q::first_kiss_location(),
+                answer: "Wrong answer".to_owned(),
+                salt: Exactly32Bytes::sample_ecad(),
+            },
+            QA {
+                question: Q::spouse_met(),
+                answer: "Wrong answer".to_owned(),
+                salt: Exactly32Bytes::sample_fade(),
+            },
+        ])
+        .expect("Should have been 6 questions and answers")
+    }
+}
+
 impl HasSampleValues for SecurityQuestionsAnswersAndSalts<6> {
     fn sample() -> Self {
         type Q = SecurityQuestion;

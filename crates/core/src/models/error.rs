@@ -47,6 +47,9 @@ pub enum Error {
     #[error("Failed to convert secret to bytes: {underlying}")]
     FailedToConvertSecretToBytes { underlying: String },
 
+    #[error("Failed to convert bytes to secret: {underlying}")]
+    FailedToConvertBytesToSecret { underlying: String },
+
     #[error("Invalid hex: {underlying}")]
     InvalidHex { underlying: String },
 
