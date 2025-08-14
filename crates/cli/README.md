@@ -14,7 +14,10 @@ underlying encryption mechanism.
 ## Installation
 Installation requires [Rust](https://www.rust-lang.org/tools/install).
 
-Use `cargo install --url https://github.com/sajjon/svar` to install the CLI.
+Install the `svar` CLI by running
+```sh,no_run
+cargo install --git https://github.com/sajjon/svar
+```
 
 ## Usage
 Simply run the `svar` command in your terminal after installation:
