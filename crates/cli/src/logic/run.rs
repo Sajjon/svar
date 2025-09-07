@@ -29,13 +29,17 @@ fn prompt_answer(
         })
 }
 
+fn data_local_dir() -> Result<PathBuf> {
+    dirs_next::data_local_dir()
+        .ok_or(Error::FailedToFindDataLocalDir)
+        .map(|dir| dir.join(env!("CARGO_PKG_NAME")))
+}
+
 /// Returns the directory to use for storing the sealed secret,
 /// if `create_if_needed` is true, it will create the directory if it does not
 /// exist - if `false` is passed it will panic if the directory does not exist.
 fn dir_created_if_needed(create_if_needed: bool) -> Result<PathBuf> {
-    let dir = dirs_next::data_local_dir()
-        .ok_or(Error::FailedToFindDataLocalDir)?
-        .join(env!("CARGO_PKG_NAME"));
+    let dir = data_local_dir()?;
     if !dir.exists() {
         if create_if_needed {
             fs::create_dir_all(&dir).map_err(|e| {
@@ -45,11 +49,26 @@ fn dir_created_if_needed(create_if_needed: bool) -> Result<PathBuf> {
                 }
             })?;
         } else {
-            panic!("Data local directory does not exist: {}", dir.display());
+            return Err(Error::DataLocalDirectoryDoesNotExist {
+                dir: dir.display().to_string(),
+            });
         }
     }
 
     Ok(dir)
+}
+
+pub fn default_path_for_sealed_secret_without_checking_existence()
+-> Result<PathBuf> {
+    let dir = data_local_dir()?;
+    Ok(dir.join(SECRET_FILE_NAME))
+}
+
+pub fn default_path_for_sealed_secret(
+    create_if_needed: bool,
+) -> Result<PathBuf> {
+    let dir = dir_created_if_needed(create_if_needed)?;
+    Ok(dir.join(SECRET_FILE_NAME))
 }
 
 const SECRET_FILE_NAME: &str = "sealed_secret.json";
@@ -78,18 +97,33 @@ fn get_answers_from_questions(
 
 /// Protects a new secret by prompting the user for a secret and security
 /// questions and answers.
-fn protect_new_secret_at(file_path: impl AsRef<Path>) -> Result<()> {
-    let secret_to_protect =
-        inquire::Password::new("Enter the secret to protect:")
-            .with_display_toggle_enabled()
-            .with_display_mode(PasswordDisplayMode::Hidden)
-            .without_confirmation()
-            .with_formatter(&|_| String::from("Input received"))
-            .with_help_message("Press CTRL+R to toggle reveal/hide your input.")
-            .prompt()
-            .map_err(|e| Error::FailedToInputSecret {
-                underlying: e.to_string(),
-            })?;
+fn protect_new_secret(
+    maybe_input_path_secret: Option<PathBuf>,
+    output_path_sealed: impl AsRef<Path>,
+) -> Result<()> {
+    let secret_to_protect = {
+        if let Some(path) = maybe_input_path_secret {
+            std::fs::read_to_string(path.clone()).map_err(|e| {
+                Error::FailedToReadSecretFromFile {
+                    file_path: path.display().to_string(),
+                    underlying: e.to_string(),
+                }
+            })
+        } else {
+            inquire::Password::new("Enter the secret to protect:")
+                .with_display_toggle_enabled()
+                .with_display_mode(PasswordDisplayMode::Hidden)
+                .without_confirmation()
+                .with_formatter(&|_| String::from("Input received"))
+                .with_help_message(
+                    "Press CTRL+R to toggle reveal/hide your input.",
+                )
+                .prompt()
+                .map_err(|e| Error::FailedToInputSecret {
+                    underlying: e.to_string(),
+                })
+        }
+    }?;
 
     info!(
         "Secret to protect received: #{} chars",
@@ -125,17 +159,24 @@ fn protect_new_secret_at(file_path: impl AsRef<Path>) -> Result<()> {
             underlying: e.to_string(),
         }
     })?;
-    let file_path = file_path.as_ref();
+
+    let output_path_sealed = output_path_sealed.as_ref();
     debug!("Serialized sealed secret.");
 
-    debug!("Saving sealed secret to file: {}", file_path.display());
-    fs::write(file_path, sealed_json).map_err(|e| {
+    debug!(
+        "Saving sealed secret to file: {}",
+        output_path_sealed.display()
+    );
+    fs::write(output_path_sealed, sealed_json).map_err(|e| {
         Error::FailedToWriteSealedSecretToFile {
-            file_path: file_path.display().to_string(),
+            file_path: output_path_sealed.display().to_string(),
             underlying: e.to_string(),
         }
     })?;
-    info!("Saved sealed secret to file: {}", file_path.display());
+    info!(
+        "Saved sealed secret to file: {}",
+        output_path_sealed.display()
+    );
 
     Ok(())
 }
@@ -185,26 +226,62 @@ fn open_sealed_secret_at(file_path: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
-/// Seals or opens a sealed secret based on the existence of the sealed secret
-/// file.
-fn seal_or_open() -> Result<()> {
-    let dir = dir_created_if_needed(false)?;
-    let file = dir.join(SECRET_FILE_NAME);
-    if file.exists() {
-        info!("Sealed secret file exists, opening it...");
-        open_sealed_secret_at(file)
-    } else {
-        info!("Sealed secret file does not exist, creating a new one...");
-        protect_new_secret_at(file)
+fn open(input: OpenInput) -> Result<()> {
+    open_sealed_secret_at(input.sealed_path())
+}
+
+fn ask_if_override_existing_sealed_secret(input: &SealInput) -> Result<()> {
+    let path = input.sealed_path();
+    if path.exists() {
+        let override_existing = inquire::Confirm::new(&format!(
+            "A sealed secret already exists at '{}'. Do you want to override it?",
+            path.display()
+        ))
+        .with_default(false)
+        .prompt()
+        .unwrap_or_default();
+
+        if !override_existing {
+            info!("Aborting sealing new secret.");
+            std::process::exit(0);
+        }
+    }
+    Ok(())
+}
+
+fn seal(input: SealInput) -> Result<()> {
+    ask_if_override_existing_sealed_secret(&input)?;
+    protect_new_secret(input.secret_path(), input.sealed_path())
+}
+
+/// Seals or opens a sealed secret based on the command line arguments.
+fn seal_or_open(args: CliArgs) -> Result<()> {
+    match args.command {
+        CommandArgs::Open(input) => {
+            if let Some(non_existing_custom_path) =
+                input.non_existent_path_to_sealed_secret()
+            {
+                warn!(
+                    "No sealed secret found at: {}",
+                    non_existing_custom_path.display()
+                );
+                return Ok(());
+            }
+            let input = input.to_input()?;
+            open(input)
+        }
+        CommandArgs::Seal(args) => {
+            let input = args.to_input()?;
+            seal(input)
+        }
     }
 }
 
-/// Seals or opens a sealed secret based on the existence of the sealed secret
-/// file,
+/// Seals or opens a sealed secret based on the command line arguments.
 ///
 /// Logs any error that occurs during the process.
-pub(crate) fn run() {
-    match seal_or_open() {
+pub(crate) fn run(args: CliArgs) {
+    match seal_or_open(args) {
         Ok(_) => {}
         Err(e) => {
             error!("Error protecting secret: {}", e);
