@@ -9,7 +9,7 @@ https://github.com/Sajjon/svar/yellow_paper/yellow_paper.md
 
 ## Abstract
 
-The ability for a user to personally control their own cryptocurrencies is both a blessing and a curse. Complete control of funds without an intermediary provides substantial benefits, but it comes with the full responsibility to protect the means of controlling those funds. We propose a cryptographic method of *decentralized security questions* to help relieve the burden of this responsibility within modern cryptocurrency systems without sacrificing true self-sovereign control.
+The ability for a user to personally control their own cryptocurrencies is both a blessing and a curse. Complete control of funds without an intermediary provides substantial benefits, but it comes with the full responsibility to protect the means of controlling those funds. We propose a cryptographic method of *decentralized security questions* that can in part relieve the burden of this responsibility within modern cryptocurrency systems without sacrificing true self-sovereign control.
 
 
 ## Introduction
@@ -18,7 +18,7 @@ Control of crypto funds always ultimately comes down to control of cryptographic
 
 More recent systems and proposals (such as threshold signatures, Ethereum's ERC-4337 “account abstraction”, and Radix's “smart accounts”) allow use of multiple private keys in multi-signature configurations to control crypto accounts so that a single private key is not necessarily granted full control of the account. However, even in multi-signatures systems, in order to maintain personal control of crypto funds without an intermediary, personal control of private keys in some form is still required and the technical complexity remains.
 
-The technical complexity of securely protecting and using private keys has led to frequent loss of cryptocurrencies. Private keys created with sufficient entropy to be secure are far too long to memorize, and difficult for the common user to manage safely. The use of "mnemonic" phrases, such as BIP39, attempt to express private keys in a form that is more human readable and memorable, but asking a user to memorize 12 or more words is unrealistic. Even in the web2 world of simple login passwords, users are so bad at managing passwords that websites are rapidly moving toward *Passkeys*, a system that relieves the user of the password burden but at the cost of introducing an intermediary that must be trusted.
+The technical complexity of securely protecting and using private keys has led to frequent loss of cryptocurrencies. Private keys created with sufficient entropy to be secure are far too long to memorize, and difficult for the common user to manage safely. The use of "mnemonic" phrases, such as BIP39, attempt to express private keys in a form that is more human readable and memorable, but asking a user to memorize 12 or more words is still unrealistic. Even in the web2 world of simple login passwords, users are so bad at managing passwords that websites are rapidly moving toward *Passkeys*, a system that relieves the user of the password burden but at the cost of introducing an intermediary that must be trusted.
 
 The common user also is used to bank and webpage logins where they can always forget a password and can still recover access through other means. With cryptocurrencies, even if using a BIP39 mnemonic phrase, losing a single word means total unrecoverable loss of funds.
 
@@ -31,11 +31,11 @@ Notably, we do **not** propose that this method is sufficiently secure to produc
 
 Our proposal makes use of a common pattern in traditional authentication: a set of personal questions that the user already knows the answers to and is likely to continue to remember, such as *"What was your favorite band in high school?"* In traditional systems, the user typically chooses from a set of potential questions and furnishes their answers, which are saved in a backend database.
 
-This is a useful authentication pattern because it doesn't require the user to create a password (which may be poorly chosen) or write one down (which may be stored insecurely). It also has the benefit of using multiple questions, potentially allowing the user to fail to answer a question incorrectly as long as they can correctly answer others, making it a very reliable method of authentication (*reliable* in the sense that the user is very likely to maintain access to the secret even with fallible memory).
+This is a useful authentication pattern because it doesn't require the user to create a password (which may be poorly chosen) or write one down (which may be stored insecurely). It also has the benefit of using multiple questions, potentially allowing the user to fail to answer a question incorrectly as long as they can correctly answer others, making it a very reliable method of authentication (*reliable* in the sense that the user is very likely to maintain access even with fallible memory).
 
 We propose to keep these benefits of a traditional security questions authentication, while adapting it so that it can produce a private key of sufficient cryptographic security for use in controlling a cryptocurrency account.
 
-We do this by starting with a set of well-chosen security questions and *structured* answers to those questions. The questions and answers are combined to produce sufficient entropy to generate a set of keypairs. Multiple *combinations* of these key pairs are then used to encrypt *multiple copies* of a single output private key. That output private key is what is used in the chosen multi-signature system.
+In short: We propose to do this by starting with a set of well-chosen security questions and *structured* answers to those questions. The questions and answers are combined to produce sufficient entropy to be used for encryption. Multiple *combinations* of these entropies are then used to encrypt *multiple copies* of a secret. That secret can then be used to derive key pairs that can be used to create and control a cryptocurrency account (typically as part of a multi-key system in practice).
 
 ![](images/dsq_sytem_diagram.png)
 
@@ -45,7 +45,7 @@ The resulting experience for the user is:
 
 * Key creation is simply choosing questions and furnishing answers
 * Key usage only requires answering a required minimum number of questions correctly, allowing for fallible memory
-* The encryption key pairs and the output private key never need to be seen
+* The derived entropies, secret, and anything derived from the secret never need to be seen or manually managed
 
 Breaking down the parts of the system, we propose the following:
 
@@ -64,31 +64,35 @@ We propose solving this with the following system requirements:
 To take the example in the diagram above, we might offer the question *“What was the year, make, and model of your first car?”* The three elements of the question allow us to break up the answer into three distinct parts. For “year” and “make”, we can even offer answers as selection lists of all possible years and auto manufacturers so that there can be no ambiguity, leaving only the “model” as freeform text. Then, the processing on that answer can reduce the example answer to “golftdi” so that later variations in the answer like “Golf TDI”, “golf tdi”, or “GOLF TDi” are all correct.
 
 
-### Multiple encrypted output private key packages
+### Multiple encryptions of the secret
 
-Once we have a keypair for each of the questions/answers, we can use them to protect a single final output private key. We encrypt the output private key into multiple packages using different combinations of question/answer key pairs to provide the level of failsafe-ness we desire.
+Each question, its correct answer, and suitable salt can be combined to produce an *entropy*. We can use those to entropies to protect our single secret, in a way that makes it recoverable using only a subset of the full list of questions/answers.
 
-For example, if we want to ask 3 questions but allow the user to answer any 2, we encrypt the output private key with every combination of 2 question/answer key pairs – 3 combinations in this case. This means that success in answering at least any 2 of the questions will allow one of the packages to be decrypted and the output private key temporarily recovered just for the duration of its use.
+To do this, we create multiple encryptions of the secret, each using a different combination of a subset of the full set of entropies we have available. The secret can later be decrypted if we can re-produce enough questions/answers (and the salt) to recover the set of entropies used for at least one of the encryptions of the secret. By choosing a number of entropies for each encryption less than the total number available, we make it possible to recover the secret with the level of failsafe-ness we desire for the user.
 
-In a real system design, the choice of the number of questions, and the number of encrypted key packages, should strike a suitable balance between increased security (more questions, fewer packages allowing for fewer incorrect answers) and increased reliability (fewer questions, more packages allowing for more incorrect answers). This choice may be influenced by things like the guessability of the questions/answers for the users in question, and how the output private key is used in the account’s multi-signature structure.
+For example, if we want to ask 3 questions but allow the user to answer any 2, we encrypt the secret with every possible combination of 2 question/answer entropies – 3 combinations in this case. This means that success in answering at least any 2 of the questions will allow one of the encryptions to be decrypted and the secret recovered (for the duration of its required use, and then forgotten).
+
+In a real system design, the choice of the number of questions, and the required number of correctly-answered questions (resulting in the number of encryptions of the secret), should strike a suitable balance between increased security (more questions, fewer incorrect answers allowed) and increased reliability (fewer questions, more incorrect answers allowed). This choice may be influenced by things like the guessability of the questions/answers for the users in question, and how the secret is used to derive keys for the account’s multi-signature structure.
 
 ### Saved data in the user's wallet
 
-To create a usable system, the user's wallet needs to store some data for later use so that it can be used automatically and so the user need not independently manage it:
+To create a usable system, the implementation should include a wallet application that stores some required data for the user so that it can be used automatically by the wallet, and so the user need not independently manage it, including:
 
-* Each of the encrypted output private key packages
-* The salt used to create the question/answer keypairs
-* The list of questions corresponding to the keypairs created
+* Each of the encryptions of the secret
+* The salt used to create the question/answer entropies
+* The list of questions, and structure of their answers, corresponding to the entropies created
 
-With these things, a wallet may perform the authentication by offering the questions (and the structure of their answers), using the answers and salt to decrypt at least one of the packages, and recovering the output private key for use.
+***Note: The last is particularly important if the implementation allows the user to choose the questions to answer from a larger list, so that they need not remember which questions they answered. It may also be important if, in the implementation, the list of questions available to the user may be later modified.***
 
-This does put some burden on the wallet software. Crypto wallets typically assume the idea that the user has written down their private key (or corresponding mnemonic seed phrase) and so that is the only information required to recover access. With the decentralized security questions concept, the wallet software has a responsibility to save the additional information that enables easy use of authentication using the security questions. That includes likely a backup mechanism of some kind to ensure access to this data even if, for example, a phone is lost.
+With these pieces of data, a wallet may perform the authentication by offering the questions, using the answers and salt to decrypt at least one of the encryptions, and recovering the secret temporarily for use.
 
-The idea of backing up this data (perhaps even in the cloud) sounds concerning on the surface. However, note that the package of data is not "security critical" on its own. If an attacker is able to access this data, they have no ability to make use of the output private key without finding the correct answers to the security questions. With sufficient entropy in the choice of questions and structured answers, the best they have achieved is narrowing down the list of questions to answer for a social engineering attack, if they are able to research the answers for the user in question or phish the answers from them.
+This does put some burden on the wallet software. Crypto wallets typically assume the idea that the user has written down their private key (or corresponding mnemonic seed phrase) and so that is the only information required to recover access. With the decentralized security questions concept, the wallet software has a responsibility to save the additional information that enables easy use of authentication using the security questions. That likely should include a backup mechanism of some kind to ensure access to this data even if, for example, a phone is lost.
 
-While this means that cryptographic security is maintained in the case of a revealed data package, it does mean that the output private key the system protects should be considered "less secure" than the traditional “pure” private key that the user has securely written down somewhere that no one can discover it. This is the primary reason that we do **not** recommend this system be used to protect a private key that wields *exclusive* or *primary* control over an account, but rather as a secondary "factor" in a multi-signature scheme.
+The idea of backing up this data (perhaps even in the cloud) sounds concerning on the surface. However, note that the package of data is not "security critical" on its own. If an attacker is able to access this data, they have no ability to make use of the encryptions of the secret without finding the correct answers to the security questions. With sufficient entropy in the implemention's choice of questions and structured answers (to make brute-forcing impractical), the best they have achieved is narrowing down the list of questions to answer for a social engineering attack, if they are able to research the answers for the user in question or phish the answers from them.
 
-One particularly good use may be in systems where a specific set of factors is used only for "recovery" of an account – similar to the traditional use case of calling your bank and reciting answers to your questions to prove who you are if you need to change your password. We'll briefly describe such a system here.
+While this means that cryptographic security is maintained in the case of a revealed data package, it does mean that the secret the system protects should be considered "more compromised" than if the secret was never input into the system whatsoever.
+
+This is the primary reason that we do **not** recommend this system be used to protect a private key that wields *exclusive* or *primary* control over an account, but rather as a secondary "factor" in a multi-signature scheme. One particularly good use may be in systems where a specific set of factors is used only for "recovery" of an account – similar to the traditional use case of calling your bank and reciting answers to your questions to prove who you are if you need to change your password. We'll briefly describe such a system now.
 
 
 ## An Example Multi-sig System Use
@@ -97,9 +101,9 @@ Even in traditional systems, a set of personal questions is never used as the so
 
 Similarly, we can use decentralized security questions not for the *primary* private key used for everyday cryptocurrency account access, but as a *secondary* factor used as part of recovery of access. This may, for example, enable the *primary* key to be one that is secure but *losable*, such as a key stored securely on a mobile phone. If the primary key is lost (perhaps by losing a phone), decentralized security questions may be used as part of a multi-signature method to update the account to use a different primary key.
 
-We can describe such a system using some features of the Radix Network.
+We can describe such a system using some features of the [Radix Network](https://www.radixdlt.com/), which has some unique technical features for taking advantage of this sort of option.
 
-The Radix Network includes "smart accounts" – essentially smart contracts that act as accounts that hold user tokens and can include multi-signature logic to define how those accounts may be used in various ways. One of the ways Radix uses this capability is the possibility of having different "roles" for smart accounts that have different rights and are controlled by different sets of private keys.
+The Radix Network includes ["smart accounts"](https://learn.radixdlt.com/article/what-are-smart-accounts) – essentially smart contracts that act as accounts that hold user tokens and can include multi-signature logic to define how those accounts may be used in various ways. One of the ways Radix uses this capability is the possibility of having different "roles" for smart accounts that have different rights and are controlled by different sets of private keys.
 
 In the Radix concept, a "primary" role is the set of private keys that can (among other things) withdraw assets from the account. However, there are also "recovery" and "confirmation" roles that can be used in concert if the user loses access to the keys of their primary role. The recovery and confirmation roles may use sources of private keys ("factors") that would normally be inconvenient to use, but work well in the unusual circumstance of a lost primary role. A high level of security can be maintained by requiring **both** the recovery and confirmation roles to act to perform the multi-sig structure update.
 
@@ -110,6 +114,8 @@ In this sort of usage, an attacker who wants to use the recovery mechanism to st
 * Somehow gain access to the security questions, and salt, the user has used
 * Guess their answers to the questions (perhaps with research or social engineering for a dedicated attacker)
 * Also compromise the wallet of the trusted contact, to use that factor in concert with the security questions
+
+This is a very different security model than the one typically used in crypto today where one key always fully controls the account forever, but is one that we think points the way to making crypto usable to the common user without compromising on full personal control.
 
 
 ## Technical Specification
