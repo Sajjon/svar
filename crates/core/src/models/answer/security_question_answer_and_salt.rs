@@ -34,7 +34,7 @@ use crate::prelude::*;
 /// assert_eq!(qa_salt.question, question);
 /// assert!(qa_salt.answer.starts_with("Answer to:"));
 /// assert_eq!(qa_salt.salt.0.len(), 32); // Salt is always 32 bytes
-///     
+///
 /// # Ok::<(), svar_core::Error>(())
 /// ```
 ///

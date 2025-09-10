@@ -2,6 +2,7 @@
 exclude-files = [
     "crates/cli/src/logic/init_logging.rs",
     "crates/cli/src/logic/run.rs",
+    "crates/cli/src/logic/get_input.rs",
     "crates/cli/src/main.rs",
 ]
 verbose = false

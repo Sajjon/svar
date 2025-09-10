@@ -2,8 +2,19 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 pub enum Error {
+    #[error("Data local directory does not exist at: '{dir}'")]
+    DataLocalDirectoryDoesNotExist { dir: String },
+
     #[error("Failed to input new secret to protect, underlying: {underlying}")]
     FailedToInputSecret { underlying: String },
+
+    #[error(
+        "Failed to read secret from file: '{file_path}', underlying: {underlying}"
+    )]
+    FailedToReadSecretFromFile {
+        file_path: String,
+        underlying: String,
+    },
 
     #[error(
         "Failed to create data local directory at '{dir}', underlying: {underlying}"

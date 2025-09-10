@@ -18,12 +18,14 @@
 //! ```
 //!
 //! # Usage
+//!
+//! ## Seal (Encrypt)
 //! Simply run the `svar` command in your terminal after installation:
 //! ```sh,no_run
-//! svar
+//! svar seal
 //! ```
 //!
-//! If run for the first time this will prompt you to enter a secret to protect
+//! This will prompt you to enter a secret to protect
 //! and then prompt you to answer a set of security questions. The secret will
 //! be encrypted using the answers to the security questions.
 //!
@@ -33,14 +35,39 @@
 //! `$HOME/.local/share/svar/sealed_secret.json` and on Windows:
 //! `C:\Users\<YOUR_USER>\AppData\Local\svar\sealed_secret.json`.
 //!
-//! On subsequent runs the program will try to read the sealed secret from
-//! the file and prompt you to answer the security questions again. If you
-//! answer enough questions correctly, the secret will be decrypted and the
-//! program will ask you if you want to print the secret in the terminal.
+//! ### Custom paths
+//! Alternatively you can specify a custom path to read the secret from
+//! and a custom path to save the sealed secret to using the `-i` and
+//! `-o` flags respectively:
+//! ```sh,no_run
+//! svar seal -i /path/to/your/secret.txt -o /path/to/save/sealed_secret.json
+//! ```
+//!
+//! When the `-i` flag is provided, the program will not prompt you to input
+//! the secret, but will read it from the specified file instead. The sealed
+//! secret will be written to the path specified by the `-o` flag.
+//!
+//! ## Open (Decrypt)
+//! You can open a sealed secret using the `open` command:
+//! ```sh,no_run
+//! svar open
+//! ```
+//!
+//! This will try to read the a sealed secret at the default path and prompt you
+//! to answer the security questions again. If you answer enough questions
+//! correctly, the secret will be decrypted and the program will ask you if you
+//! want to print the secret in the terminal.
 //!
 //! If you which to change the secret, simply delete the sealed secret file
 //! and run the program again. It will then prompt you to enter a new secret
 //! and answer the security questions again.
+//!
+//! ### Custom path
+//! You can also specify a custom path to read the sealed secret from
+//! using the `-i` flag:
+//! ```sh,no_run
+//! svar open -i /path/to/sealed_secret.json
+//! ```
 //!
 //! > [!TIP]
 //! > When decrypting a sealed secret, try inputting an incorrect answer to any
@@ -51,8 +78,6 @@
 //! Later we might make this example CLI application more advanced by
 //! allowing you to specify the number of questions and answers, and the
 //! minimum number of correct answers required to decrypt the secret.
-//! We might also allow you to pass a path allowing you to have multiple
-//! sealed secrets.
 
 mod logic;
 mod models;
@@ -76,10 +101,13 @@ pub mod prelude {
     };
 
     pub use inquire::PasswordDisplayMode;
-    pub use log::{debug, error, info};
+    pub use log::{debug, error, info, warn};
 }
 
 fn main() {
-    crate::prelude::init_logging();
-    crate::prelude::run()
+    use clap::Parser;
+    use prelude::*;
+    init_logging();
+    let input = CliArgs::parse();
+    run(input)
 }
