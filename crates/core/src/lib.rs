@@ -35,56 +35,61 @@
 //! /// these questions are properly constructed with thorough entropy
 //! /// analysis. This is hard, requires expert knowledge and takes time.
 //! /// The questions below are examples, do not assume they're secure ❗️
-//! let q0 = SecurityQuestion {
-//!     id: 0,
-//!     version: 1,
-//!     kind: SecurityQuestionKind::Freeform,
-//!     question: "What was the first concert you attended?".to_owned(),
-//!     expected_answer_format: SecurityQuestionExpectedAnswerFormat {
-//!         answer_structure: "<ARTIST>, <LOCATION>, <YEAR>".to_owned(),
-//!         example_answer: "Jean-Michel Jarre, Paris La Défense, 1990".to_owned(),
-//!         unsafe_answers: vec![],
-//!     },
-//! };
-//! let q1 = SecurityQuestion {
-//!     id: 1,
-//!     version: 1,
-//!     kind: SecurityQuestionKind::Freeform,
-//!     question: "What was the name of the boy or the girl you first kissed?".to_owned(),
-//!     expected_answer_format: SecurityQuestionExpectedAnswerFormat {
-//!         answer_structure: "<LAST_NAME>, <FIRST_NAME>>".to_owned(),
-//!         example_answer: "Doe, Jane".to_owned(),
-//!         unsafe_answers: vec![]
-//!     },
-//! };
-//! let q2 = SecurityQuestion {
-//!     id: 2,
-//!     version: 1,
-//!     kind: SecurityQuestionKind::Freeform,
-//!     question: "What was the name of your first stuffed animal?".to_owned(),
-//!     expected_answer_format: SecurityQuestionExpectedAnswerFormat {
-//!         answer_structure: "<NAME>".to_owned(),
-//!         example_answer: "Oinky piggy pig".to_owned(),
-//!         unsafe_answers: vec![
-//!             "Teddy".to_owned(),
-//!             "Cat".to_owned(),
-//!             "Dog".to_owned(),
-//!             "Winnie".to_owned(), // Winnie the Poh
-//!             "Rabbit".to_owned(), // Peter Rabbit
-//!         ],
-//!     },
-//! };
-//! let q3 = SecurityQuestion {
-//!     id: 3,
-//!     version: 1,
-//!     kind: SecurityQuestionKind::Freeform,
-//!     question: "What was the last name of your third grade teacher?".to_owned(),
-//!     expected_answer_format: SecurityQuestionExpectedAnswerFormat {
-//!         answer_structure: "<LAST_NAME>, <FIRST_NAME>>".to_owned(),
-//!         example_answer: "Parker, Elisabeth".to_owned(),
-//!         unsafe_answers: vec![],
-//!     },
-//! };
+//! let q0 = SecurityQuestion::builder()
+//!     .id(0)
+//!     .version(1)
+//!     .kind(SecurityQuestionKind::Freeform)
+//!     .question("What was the first concert you attended?")
+//!     .expected_answer_format(
+//!         SecurityQuestionExpectedAnswerFormat::builder()
+//!             .answer_structure("<ARTIST>, <LOCATION>, <YEAR>")
+//!             .example_answer("Jean-Michel Jarre, Paris La Défense, 1990")
+//!             .build(),
+//!     )
+//!     .build();
+//! let q1 = SecurityQuestion::builder()
+//!     .id(1)
+//!     .version(1)
+//!     .kind(SecurityQuestionKind::Freeform)
+//!     .question("What was the name of the boy or the girl you first kissed?")
+//!     .expected_answer_format(
+//!         SecurityQuestionExpectedAnswerFormat::builder()
+//!             .answer_structure("<LAST_NAME>, <FIRST_NAME>>")
+//!             .example_answer("Doe, Jane")
+//!             .build(),
+//!     )
+//!     .build();
+//! let q2 = SecurityQuestion::builder()
+//!     .id(2)
+//!     .version(1)
+//!     .kind(SecurityQuestionKind::Freeform)
+//!     .question("What was the name of your first stuffed animal?")
+//!     .expected_answer_format(
+//!         SecurityQuestionExpectedAnswerFormat::builder()
+//!             .answer_structure("<NAME>")
+//!             .example_answer("Oinky piggy pig")
+//!             .unsafe_answers([
+//!             "Teddy",
+//!             "Cat",
+//!             "Dog",
+//!             "Winnie", // Winnie the Poh
+//!             "Rabbit", // Peter Rabbit
+//!             ])
+//!             .build(),
+//!     )
+//!     .build();
+//! let q3 = SecurityQuestion::builder()
+//!     .id(3)
+//!     .version(1)
+//!     .kind(SecurityQuestionKind::Freeform)
+//!     .question("What was the last name of your third grade teacher?")
+//!     .expected_answer_format(
+//!         SecurityQuestionExpectedAnswerFormat::builder()
+//!             .answer_structure("<LAST_NAME>, <FIRST_NAME>>")
+//!             .example_answer("Parker, Elisabeth")
+//!             .build(),
+//!     )
+//!     .build();
 //!
 //! /// The secret the user wants to protect
 //! let user_secret = "user's super sensitive secret".to_owned();
@@ -188,17 +193,18 @@
 //!
 //! /// If you provide answers to completely unrelated questions, an error is
 //! /// thrown
-//! let unrelated_question = SecurityQuestion {
-//!     id: 100,
-//!     version: 1,
-//!     kind: SecurityQuestionKind::Freeform,
-//!     question: "In which city and which year did your parents meet?".to_owned(),
-//!     expected_answer_format: SecurityQuestionExpectedAnswerFormat {
-//!         answer_structure: "<CITY>, <YEAR>".to_owned(),
-//!         example_answer: "London, 1963".to_owned(),
-//!         unsafe_answers: vec![],
-//!     },  
-//! };
+//! let unrelated_question = SecurityQuestion::builder()
+//!     .id(100)
+//!     .version(1)
+//!     .kind(SecurityQuestionKind::Freeform)
+//!     .question("In which city and which year did your parents meet?")
+//!     .expected_answer_format(
+//!         SecurityQuestionExpectedAnswerFormat::builder()
+//!             .answer_structure("<CITY>, <YEAR>")
+//!             .example_answer("London, 1963")
+//!             .build(),
+//!     )
+//!     .build();
 //!
 //! /// Provide some dummy answer to the unrelated question
 //! let answer_to_unrelated_question = SecurityQuestionAnswerAndSalt::by_answering_freeform(

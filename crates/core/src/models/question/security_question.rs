@@ -22,20 +22,20 @@ use crate::prelude::*;
 /// ```
 /// use svar_core::*;
 ///
-/// let question = SecurityQuestion::with_details(
-///     1,                                    // id
-///     1,                                    // version
-///     SecurityQuestionKind::Freeform,       // kind
-///     "What is your mother's maiden name?", // question
-///     SecurityQuestionExpectedAnswerFormat::with_details(
-///         "Last name",
-///         "Smith",
-///         [],
-///     ), // format
-/// );
+/// let format = SecurityQuestionExpectedAnswerFormat::builder()
+///     .answer_structure("Last name")
+///     .example_answer("Smith")
+///     .build();
+/// let question = SecurityQuestion::builder()
+///     .id(1)
+///     .version(1)
+///     .kind(SecurityQuestionKind::Freeform)
+///     .question("What is your mother's maiden name?")
+///     .expected_answer_format(format)
+///     .build();
 ///
-/// assert_eq!(question.id, 1);
-/// assert_eq!(question.question, "What is your mother's maiden name?");
+/// assert_eq!(question.id(), 1);
+/// assert_eq!(question.question(), "What is your mother's maiden name?");
 /// ```
 ///
 /// ## Using Sample Questions
@@ -44,7 +44,7 @@ use crate::prelude::*;
 /// use svar_core::*;
 ///
 /// let question = SecurityQuestion::sample();
-/// println!("Question: {}", question.question);
+/// println!("Question: {}", question.question());
 ///
 /// let other_question = SecurityQuestion::sample_other();
 /// assert_ne!(question, other_question);
@@ -57,7 +57,7 @@ use crate::prelude::*;
 ///
 /// let question = SecurityQuestion::sample();
 /// let question_text: &str = question.as_ref();
-/// assert_eq!(question_text, &question.question);
+/// assert_eq!(question_text, question.question());
 /// ```
 ///
 /// # Security Considerations
@@ -97,34 +97,34 @@ pub struct SecurityQuestion {
     /// This ID allows for tracking and referencing specific questions across
     /// different versions and implementations. Questions with the same ID but
     /// different versions represent updates to the same conceptual question.
-    pub id: u16, // FIXME: newtype
+    id: u16, // FIXME: newtype
 
     /// Version number for this security question.
     ///
     /// Allows for evolution of questions over time while maintaining backwards
     /// compatibility. Higher version numbers indicate newer versions of the
     /// same question (identified by the same ID).
-    pub version: u8, // FIXME: newtype
+    version: u8, // FIXME: newtype
 
     /// The category or type of this security question.
     ///
     /// Categorizes questions by their nature (e.g., personal history,
     /// preferences, factual information) to help with question selection
     /// and validation.
-    pub kind: SecurityQuestionKind,
+    kind: SecurityQuestionKind,
 
     /// The actual question text presented to the user.
     ///
     /// This is the human-readable question that users will see and answer.
     /// Should be clear, unambiguous, and culturally appropriate.
-    pub question: String,
+    question: String,
 
     /// Expected format constraints for answers to this question.
     ///
     /// Defines how answers should be structured (e.g., single line, date
     /// format, numeric) to ensure consistency in answer collection and
     /// validation.
-    pub expected_answer_format: SecurityQuestionExpectedAnswerFormat,
+    expected_answer_format: SecurityQuestionExpectedAnswerFormat,
 }
 
 /// Provides access to the question text as a string reference.
@@ -139,7 +139,7 @@ pub struct SecurityQuestion {
 ///
 /// let question = SecurityQuestion::sample();
 /// let text: &str = question.as_ref();
-/// assert_eq!(text, &question.question);
+/// assert_eq!(text, question.question());
 ///
 /// // Can be used with functions expecting &str
 /// fn print_question(q: impl AsRef<str>) {
@@ -153,7 +153,25 @@ impl AsRef<str> for SecurityQuestion {
     }
 }
 
+#[bon::bon]
 impl SecurityQuestion {
+    #[builder]
+    pub fn new(
+        id: u16,
+        version: u8,
+        kind: SecurityQuestionKind,
+        #[builder(into)] question: String,
+        expected_answer_format: SecurityQuestionExpectedAnswerFormat,
+    ) -> Self {
+        Self {
+            id,
+            version,
+            kind,
+            question,
+            expected_answer_format,
+        }
+    }
+
     /// Creates a new security question with all details specified.
     ///
     /// This is the most comprehensive constructor, allowing full control over
@@ -179,21 +197,22 @@ impl SecurityQuestion {
     /// ```
     /// use svar_core::*;
     ///
-    /// let question = SecurityQuestion::with_details(
-    ///     101,
-    ///     1,
-    ///     SecurityQuestionKind::Freeform,
-    ///     "What was the name of your first pet?",
-    ///     SecurityQuestionExpectedAnswerFormat::with_details(
-    ///         "Pet name",
-    ///         "Fluffy",
-    ///         ["Dog", "Cat"],
-    ///     ),
-    /// );
+    /// let format = SecurityQuestionExpectedAnswerFormat::builder()
+    ///     .answer_structure("Pet name")
+    ///     .example_answer("Fluffy")
+    ///     .unsafe_answers(["Dog", "Cat"])
+    ///     .build();
+    /// let question = SecurityQuestion::builder()
+    ///     .id(101)
+    ///     .version(1)
+    ///     .kind(SecurityQuestionKind::Freeform)
+    ///     .question("What was the name of your first pet?")
+    ///     .expected_answer_format(format)
+    ///     .build();
     ///
-    /// assert_eq!(question.id, 101);
-    /// assert_eq!(question.version, 1);
-    /// assert_eq!(question.kind, SecurityQuestionKind::Freeform);
+    /// assert_eq!(question.id(), 101);
+    /// assert_eq!(question.version(), 1);
+    /// assert_eq!(question.kind(), &SecurityQuestionKind::Freeform);
     /// ```
     ///
     /// ## Factual Question
@@ -201,17 +220,17 @@ impl SecurityQuestion {
     /// ```
     /// use svar_core::*;
     ///
-    /// let question = SecurityQuestion::with_details(
-    ///     102,
-    ///     2,
-    ///     SecurityQuestionKind::Freeform,
-    ///     "What is your date of birth? (YYYY-MM-DD)",
-    ///     SecurityQuestionExpectedAnswerFormat::with_details(
-    ///         "YYYY-MM-DD",
-    ///         "1990-01-01",
-    ///         [],
-    ///     ),
-    /// );
+    /// let format = SecurityQuestionExpectedAnswerFormat::builder()
+    ///     .answer_structure("YYYY-MM-DD")
+    ///     .example_answer("1990-01-01")
+    ///     .build();
+    /// let question = SecurityQuestion::builder()
+    ///     .id(102)
+    ///     .version(2)
+    ///     .kind(SecurityQuestionKind::Freeform)
+    ///     .question("What is your date of birth? (YYYY-MM-DD)")
+    ///     .expected_answer_format(format)
+    ///     .build();
     /// ```
     ///
     /// ## General Question
@@ -219,19 +238,20 @@ impl SecurityQuestion {
     /// ```
     /// use svar_core::*;
     ///
-    /// let question = SecurityQuestion::with_details(
-    ///     103,
-    ///     1,
-    ///     SecurityQuestionKind::Freeform,
-    ///     "What is your favorite color?",
-    ///     SecurityQuestionExpectedAnswerFormat::with_details(
-    ///         "Color name",
-    ///         "Blue",
-    ///         ["Red", "Blue", "Green"],
-    ///     ),
-    /// );
+    /// let format = SecurityQuestionExpectedAnswerFormat::builder()
+    ///     .answer_structure("Color name")
+    ///     .example_answer("Blue")
+    ///     .unsafe_answers(["Red", "Blue", "Green"])
+    ///     .build();
+    /// let question = SecurityQuestion::builder()
+    ///     .id(103)
+    ///     .version(1)
+    ///     .kind(SecurityQuestionKind::Freeform)
+    ///     .question("What is your favorite color?")
+    ///     .expected_answer_format(format)
+    ///     .build();
     ///
-    /// assert_eq!(question.kind, SecurityQuestionKind::Freeform);
+    /// assert_eq!(question.kind(), &SecurityQuestionKind::Freeform);
     /// ```
     pub fn with_details(
         id: u16,
@@ -240,13 +260,35 @@ impl SecurityQuestion {
         question: impl AsRef<str>,
         expected_answer_format: SecurityQuestionExpectedAnswerFormat,
     ) -> Self {
-        Self {
-            id,
-            version,
-            kind,
-            question: question.as_ref().to_owned(),
-            expected_answer_format,
-        }
+        Self::builder()
+            .id(id)
+            .version(version)
+            .kind(kind)
+            .question(question.as_ref())
+            .expected_answer_format(expected_answer_format)
+            .build()
+    }
+
+    pub fn id(&self) -> u16 {
+        self.id
+    }
+
+    pub fn version(&self) -> u8 {
+        self.version
+    }
+
+    pub fn kind(&self) -> &SecurityQuestionKind {
+        &self.kind
+    }
+
+    pub fn question(&self) -> &str {
+        &self.question
+    }
+
+    pub fn expected_answer_format(
+        &self,
+    ) -> &SecurityQuestionExpectedAnswerFormat {
+        &self.expected_answer_format
     }
 
     /// Creates a freeform security question with the specified ID.
@@ -270,34 +312,35 @@ impl SecurityQuestion {
     /// ```
     /// use svar_core::*;
     ///
-    /// let question = SecurityQuestion::with_details(
-    ///     42,
-    ///     1,
-    ///     SecurityQuestionKind::Freeform,
-    ///     "What was the make of your first car?",
-    ///     SecurityQuestionExpectedAnswerFormat::with_details(
-    ///         "Car make",
-    ///         "Toyota",
-    ///         ["Toyota", "Honda", "Ford"],
-    ///     ),
-    /// );
+    /// let format = SecurityQuestionExpectedAnswerFormat::builder()
+    ///     .answer_structure("Car make")
+    ///     .example_answer("Toyota")
+    ///     .unsafe_answers(["Toyota", "Honda", "Ford"])
+    ///     .build();
+    /// let question = SecurityQuestion::builder()
+    ///     .id(42)
+    ///     .version(1)
+    ///     .kind(SecurityQuestionKind::Freeform)
+    ///     .question("What was the make of your first car?")
+    ///     .expected_answer_format(format)
+    ///     .build();
     ///
-    /// assert_eq!(question.id, 42);
-    /// assert_eq!(question.version, 1);
-    /// assert_eq!(question.kind, SecurityQuestionKind::Freeform);
+    /// assert_eq!(question.id(), 42);
+    /// assert_eq!(question.version(), 1);
+    /// assert_eq!(question.kind(), &SecurityQuestionKind::Freeform);
     /// ```
     fn freeform_with_id(
         id: u16,
         question: impl AsRef<str>,
         expected_answer_format: SecurityQuestionExpectedAnswerFormat,
     ) -> Self {
-        Self::with_details(
-            id,
-            1,
-            SecurityQuestionKind::Freeform,
-            question,
-            expected_answer_format,
-        )
+        Self::builder()
+            .id(id)
+            .version(1)
+            .kind(SecurityQuestionKind::Freeform)
+            .question(question.as_ref())
+            .expected_answer_format(expected_answer_format)
+            .build()
     }
 }
 
@@ -311,10 +354,10 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             0,
             "What was the first exam you failed",
-            SecurityQuestionExpectedAnswerFormat::new(
-                "<SCHOOL>, <SCHOOL_GRADE>, <SUBJECT>",
-                "MIT, year 4, Python",
-            ),
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<SCHOOL>, <SCHOOL_GRADE>, <SUBJECT>")
+                .example_answer("MIT, year 4, Python")
+                .build(),
         )
     }
 
@@ -344,10 +387,10 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             2,
             "What was the first concert you attended?",
-            SecurityQuestionExpectedAnswerFormat::new(
-                "<ARTIST>, <LOCATION>, <YEAR>",
-                "Jean-Michel Jarre, Paris La Défense, 1990",
-            ),
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<ARTIST>, <LOCATION>, <YEAR>")
+                .example_answer("Jean-Michel Jarre, Paris La Défense, 1990")
+                .build(),
         )
     }
     pub fn q02() -> Self {
@@ -431,11 +474,17 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             7,
             "What was the name of your first stuffed animal?",
-            SecurityQuestionExpectedAnswerFormat::with_details(
-                "<NAME>",
-                "Oinky piggy pig",
-                ["Teddy", "Cat", "Dog", "Winnie (the Poh)", "(Peter) Rabbit"],
-            ),
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<NAME>")
+                .example_answer("Oinky piggy pig")
+                .unsafe_answers([
+                    "Teddy",
+                    "Cat",
+                    "Dog",
+                    "Winnie (the Poh)",
+                    "(Peter) Rabbit",
+                ])
+                .build(),
         )
     }
 
@@ -452,13 +501,13 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             8,
             "What is your oldest cousin's middle name?",
-            SecurityQuestionExpectedAnswerFormat::with_details(
-                "<NAME>",
-                "Maria",
-                [
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<NAME>")
+                .example_answer("Maria")
+                .unsafe_answers([
                     "Don't use this one if you and your cousin are very close and have plenty of mutual friends.",
-                ],
-            ),
+                ])
+                .build(),
         )
     }
 
@@ -492,10 +541,10 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             10,
             "What is the name of a college you applied to but didn't attend?",
-            SecurityQuestionExpectedAnswerFormat::new(
-                "<UNIVERSITY NAME>",
-                "Oxford",
-            ),
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<UNIVERSITY NAME>")
+                .example_answer("Oxford")
+                .build(),
         )
     }
 
@@ -512,10 +561,10 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             11,
             "What was the name of the first school you remember attending?",
-            SecurityQuestionExpectedAnswerFormat::new(
-                "<SCHOOL NAME>",
-                "Hogwartz",
-            ),
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<SCHOOL NAME>")
+                .example_answer("Hogwartz")
+                .build(),
         )
     }
 
@@ -567,13 +616,13 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             14,
             "What was the street name where your best friend in high school lived?",
-            SecurityQuestionExpectedAnswerFormat::with_details(
-                "<STREET NAME WITHOUT NUMBER>",
-                "Baker Street",
-                [
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<STREET NAME WITHOUT NUMBER>")
+                .example_answer("Baker Street")
+                .unsafe_answers([
                     "Bad if had several different best friends during high school.",
-                ],
-            ),
+                ])
+                .build(),
         )
     }
 
@@ -609,11 +658,13 @@ impl SecurityQuestion {
         Self::freeform_with_id(
             16,
             "What was the name of the street where you were living when you were 8 years old?",
-            SecurityQuestionExpectedAnswerFormat::with_details(
-                "<STREET NAME WITHOUT NUMBER>",
-                "Abbey Road",
-                ["Bad if you lived in many places during that year."],
-            ),
+            SecurityQuestionExpectedAnswerFormat::builder()
+                .answer_structure("<STREET NAME WITHOUT NUMBER>")
+                .example_answer("Abbey Road")
+                .unsafe_answers([
+                    "Bad if you lived in many places during that year.",
+                ])
+                .build(),
         )
     }
 
@@ -691,7 +742,7 @@ mod tests {
         assert!(
             Sut::freeform()
                 .iter()
-                .all(|q| q.kind == SecurityQuestionKind::Freeform)
+                .all(|q| q.kind() == &SecurityQuestionKind::Freeform)
         );
     }
 }

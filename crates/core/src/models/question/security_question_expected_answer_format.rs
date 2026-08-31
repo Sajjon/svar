@@ -7,54 +7,75 @@ use crate::prelude::*;
 #[display("{answer_structure}")]
 pub struct SecurityQuestionExpectedAnswerFormat {
     /// E.g. `"<CITY>, <YEAR>"`
-    pub answer_structure: String,
+    answer_structure: String,
 
     /// An example of a possible answer that matches `answer_structure`.
     /// E.g. `"Berlin, 1976"`
-    pub example_answer: String,
+    example_answer: String,
 
     /// If user is about to select the question:
     /// `"What was the name of your first stuffed animal?"`
     ///
     /// Then we can discourage the user from selecting that question
     /// if the answer is in `["Teddy", "Peter Rabbit", "Winnie (the Poh)"]`
-    pub unsafe_answers: Vec<String>,
+    unsafe_answers: Vec<String>,
 }
 
+#[bon::bon]
 impl SecurityQuestionExpectedAnswerFormat {
-    pub fn with_details(
-        structure: impl AsRef<str>,
-        example: impl AsRef<str>,
-        unsafe_answers: impl IntoIterator<Item = &'static str>,
+    #[builder]
+    pub fn new(
+        #[builder(into)] answer_structure: String,
+        #[builder(into)] example_answer: String,
+        #[builder(
+            default,
+            with = |unsafe_answers: impl IntoIterator<Item = impl Into<String>>| {
+                unsafe_answers.into_iter().map(Into::into).collect()
+            }
+        )]
+        unsafe_answers: Vec<String>,
     ) -> Self {
         Self {
-            answer_structure: structure.as_ref().to_owned(),
-            example_answer: example.as_ref().to_owned(),
-            unsafe_answers: unsafe_answers
-                .into_iter()
-                .map(|x| x.to_owned())
-                .collect_vec(),
+            answer_structure,
+            example_answer,
+            unsafe_answers,
         }
     }
 
-    pub fn new(structure: impl AsRef<str>, example: impl AsRef<str>) -> Self {
-        Self::with_details(structure, example, [])
+    pub fn answer_structure(&self) -> &str {
+        &self.answer_structure
+    }
+
+    pub fn example_answer(&self) -> &str {
+        &self.example_answer
+    }
+
+    pub fn unsafe_answers(&self) -> &[String] {
+        &self.unsafe_answers
     }
 
     pub fn name() -> Self {
-        Self::new("<NAME>", "Maria")
+        Self::builder()
+            .answer_structure("<NAME>")
+            .example_answer("Maria")
+            .build()
     }
 
     pub fn location() -> Self {
-        Self::with_details(
-            "<LOCATION>",
-            "At bus stop outside of Dallas",
-            ["Specifying only a country as location would be unsafe"],
-        )
+        Self::builder()
+            .answer_structure("<LOCATION>")
+            .example_answer("At bus stop outside of Dallas")
+            .unsafe_answers([
+                "Specifying only a country as location would be unsafe",
+            ])
+            .build()
     }
 
     pub fn preset_city_and_year() -> Self {
-        Self::new("<CITY>, <YEAR>", "Berlin, 1976")
+        Self::builder()
+            .answer_structure("<CITY>, <YEAR>")
+            .example_answer("Berlin, 1976")
+            .build()
     }
 }
 

@@ -5,10 +5,10 @@ use crate::prelude::*;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct AesGcmSealedBox {
     /// Nonce is 12 bytes
-    pub(super) nonce: Exactly12Bytes,
+    nonce: Exactly12Bytes,
 
     /// Auth tag and encrypted payload
-    pub(super) cipher_text: Vec<u8>,
+    cipher_text: Vec<u8>,
 }
 
 /// The length of the authentication tag.
@@ -17,7 +17,13 @@ pub const AUTH_TAG_LEN: usize = 16;
 /// The length of the nonce used in AES GCM.
 pub const NONCE_LEN: usize = 12;
 
+#[bon::bon]
 impl AesGcmSealedBox {
+    #[builder]
+    pub(super) fn new(nonce: Exactly12Bytes, cipher_text: Vec<u8>) -> Self {
+        Self { nonce, cipher_text }
+    }
+
     /// At least 1 byte cipher. VERY much LOWER bound
     pub const LOWER_BOUND_LEN: usize = AUTH_TAG_LEN + NONCE_LEN + 1;
 
@@ -29,6 +35,10 @@ impl AesGcmSealedBox {
         combined.append(&mut cipher_text);
         assert!(combined.len() >= Self::LOWER_BOUND_LEN);
         combined
+    }
+
+    pub(super) fn into_parts(self) -> (Exactly12Bytes, Vec<u8>) {
+        (self.nonce, self.cipher_text)
     }
 }
 
@@ -46,9 +56,9 @@ impl TryFrom<&[u8]> for AesGcmSealedBox {
         let nonce_bytes = &bytes[..NONCE_LEN];
         let nonce = Exactly12Bytes::try_from(nonce_bytes).unwrap();
         let cipher_text = &bytes[NONCE_LEN..];
-        Ok(Self {
-            nonce,
-            cipher_text: cipher_text.to_owned(),
-        })
+        Ok(Self::builder()
+            .nonce(nonce)
+            .cipher_text(cipher_text.to_owned())
+            .build())
     }
 }

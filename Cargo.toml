@@ -13,6 +13,7 @@ aes-gcm = { version = "=0.10.3", default-features = false, features = [
     "getrandom",
     "zeroize",
 ] }
+bon = "=3.9.3"
 derive_more = { version = "2.0.1", features = ["full"] }
 hex = "0.4.3"
 hkdf = { version = "=0.12.4", default-features = false }

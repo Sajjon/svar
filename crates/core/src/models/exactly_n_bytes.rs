@@ -22,7 +22,7 @@ pub type Exactly12Bytes = ExactlyNBytes<12>;
 )]
 #[display("{}", self.to_hex())]
 #[debug("{}", self.to_hex())]
-pub struct ExactlyNBytes<const N: usize>(pub [u8; N]);
+pub struct ExactlyNBytes<const N: usize>([u8; N]);
 
 use std::str::FromStr;
 impl<const N: usize> std::str::FromStr for ExactlyNBytes<N> {
@@ -37,7 +37,13 @@ impl<const N: usize> std::str::FromStr for ExactlyNBytes<N> {
     }
 }
 
+#[bon::bon]
 impl<const N: usize> ExactlyNBytes<N> {
+    #[builder]
+    pub fn new(bytes: [u8; N]) -> Self {
+        Self(bytes)
+    }
+
     pub fn bytes(&self) -> &[u8; N] {
         &self.0
     }

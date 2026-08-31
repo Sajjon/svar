@@ -6,32 +6,50 @@ use crate::prelude::*;
 )]
 #[display("SecurityQuestionAndSalt(question: {question})")]
 pub struct SecurityQuestionAndSalt {
-    pub question: SecurityQuestion,
-    pub salt: Exactly32Bytes,
+    question: SecurityQuestion,
+    salt: Exactly32Bytes,
 }
 
+#[bon::bon]
 impl SecurityQuestionAndSalt {
+    #[builder]
+    pub fn new(question: SecurityQuestion, salt: Exactly32Bytes) -> Self {
+        Self { question, salt }
+    }
+
     pub fn generate_salt(question: SecurityQuestion) -> Self {
-        Self {
-            question,
-            salt: Exactly32Bytes::generate(),
-        }
+        Self::builder()
+            .question(question)
+            .salt(Exactly32Bytes::generate())
+            .build()
+    }
+
+    pub fn question(&self) -> &SecurityQuestion {
+        &self.question
+    }
+
+    pub fn salt(&self) -> &Exactly32Bytes {
+        &self.salt
+    }
+
+    pub fn into_parts(self) -> (SecurityQuestion, Exactly32Bytes) {
+        (self.question, self.salt)
     }
 }
 
 impl HasSampleValues for SecurityQuestionAndSalt {
     fn sample() -> Self {
-        Self {
-            question: SecurityQuestion::sample(),
-            salt: Exactly32Bytes::sample_aced(),
-        }
+        Self::builder()
+            .question(SecurityQuestion::sample())
+            .salt(Exactly32Bytes::sample_aced())
+            .build()
     }
 
     fn sample_other() -> Self {
-        Self {
-            question: SecurityQuestion::sample_other(),
-            salt: Exactly32Bytes::sample_babe(),
-        }
+        Self::builder()
+            .question(SecurityQuestion::sample_other())
+            .salt(Exactly32Bytes::sample_babe())
+            .build()
     }
 }
 
@@ -59,7 +77,7 @@ mod tests {
         let gen0 = SecurityQuestionAndSalt::generate_salt(question.clone());
         let gen1 = SecurityQuestionAndSalt::generate_salt(question.clone());
         assert_ne!(gen0, gen1);
-        assert_ne!(gen0.salt, gen1.salt);
-        assert_eq!(gen0.question, gen1.question);
+        assert_ne!(gen0.salt(), gen1.salt());
+        assert_eq!(gen0.question(), gen1.question());
     }
 }

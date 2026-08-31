@@ -19,9 +19,19 @@ use crate::prelude::*;
     Hash,
 )]
 #[serde(transparent)]
-pub struct EncryptionKey(pub Exactly32Bytes);
+pub struct EncryptionKey(Exactly32Bytes);
 
+#[bon::bon]
 impl EncryptionKey {
+    #[builder]
+    pub fn new(bytes: Exactly32Bytes) -> Self {
+        Self(bytes)
+    }
+
+    pub fn bytes(&self) -> &[u8; 32] {
+        self.0.bytes()
+    }
+
     /// Generates a new `EncryptionKey` using a CSPRNG.
     pub fn generate() -> Self {
         Self::from(Exactly32Bytes::generate())
@@ -30,7 +40,7 @@ impl EncryptionKey {
 
 impl From<Exactly32Bytes> for EncryptionKey {
     fn from(value: Exactly32Bytes) -> Self {
-        Self(value)
+        Self::builder().bytes(value).build()
     }
 }
 

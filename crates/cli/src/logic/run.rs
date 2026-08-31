@@ -13,16 +13,19 @@ fn prompt_answer(
         question_index + 1,
         total_questions
     );
-    inquire::Text::new(&question.question.question)
+    inquire::Text::new(question.question().question())
         .with_help_message(&format!(
             "Expected format: \"{}\"",
-            question.question.expected_answer_format
+            question.question().expected_answer_format()
         ))
         .prompt()
-        .map(|answer| SecurityQuestionAnswerAndSalt {
-            question: question.question,
-            answer,
-            salt: question.salt,
+        .map(|answer| {
+            let (question, salt) = question.into_parts();
+            SecurityQuestionAnswerAndSalt::builder()
+                .question(question)
+                .answer(answer)
+                .salt(salt)
+                .build()
         })
         .map_err(|e| Error::InvalidAnswer {
             underlying: e.to_string(),
@@ -206,7 +209,7 @@ fn open_sealed_secret_at(file_path: impl AsRef<Path>) -> Result<()> {
     debug!("Deserialized sealed secret.");
 
     let answers = get_answers_from_questions(
-        sealed.security_questions_and_salts.clone(),
+        sealed.security_questions_and_salts().clone(),
     )?;
 
     info!("All answers received, now decrypting the sealed secret...");
