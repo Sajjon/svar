@@ -2,11 +2,21 @@ use crate::prelude::*;
 
 /// A pair of security question and salt
 #[derive(
-    Serialize, Display, Deserialize, Clone, PartialEq, Eq, Hash, Debug,
+    Serialize,
+    Display,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Debug,
+    getset::Getters,
 )]
 #[display("SecurityQuestionAndSalt(question: {question})")]
 pub struct SecurityQuestionAndSalt {
+    #[getset(get = "pub")]
     question: SecurityQuestion,
+    #[getset(get = "pub")]
     salt: Exactly32Bytes,
 }
 
@@ -22,14 +32,6 @@ impl SecurityQuestionAndSalt {
             .question(question)
             .salt(Exactly32Bytes::generate())
             .build()
-    }
-
-    pub fn question(&self) -> &SecurityQuestion {
-        &self.question
-    }
-
-    pub fn salt(&self) -> &Exactly32Bytes {
-        &self.salt
     }
 
     pub fn into_parts(self) -> (SecurityQuestion, Exactly32Bytes) {

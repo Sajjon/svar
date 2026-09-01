@@ -207,7 +207,9 @@ pub const DEFAULT_MIN_CORRECT_ANSWERS: usize = 4;
 ///   not in original set
 /// - [`FailedToConvertBytesToSecret`](Error::FailedToConvertBytesToSecret):
 ///   Secret deserialization failed
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
+#[derive(
+    Serialize, Deserialize, Clone, PartialEq, Eq, Debug, getset::Getters,
+)]
 pub struct SecurityQuestionsSealed<
     Secret: IsSecret,
     const QUESTION_COUNT: usize = DEFAULT_QUESTION_COUNT,
@@ -222,6 +224,7 @@ pub struct SecurityQuestionsSealed<
     /// These are stored with the encrypted secret so that during decryption,
     /// the system knows which questions to expect answers for and can use
     /// the same salts that were used during encryption.
+    #[getset(get = "pub")]
     security_questions_and_salts: SecurityQuestionsAndSalts<QUESTION_COUNT>,
 
     /// The Key Derivation Function (KDF) algorithm configuration.
@@ -229,12 +232,14 @@ pub struct SecurityQuestionsSealed<
     /// This determines how encryption keys are derived from the combination
     /// of security questions, answers, and salts. The scheme is versioned
     /// to allow for future cryptographic upgrades.
+    #[getset(get = "pub")]
     kdf_scheme: SecurityQuestionsKdfScheme,
 
     /// The encryption algorithm configuration.
     ///
     /// This specifies which encryption algorithm (e.g., AES-256-GCM) is used
     /// to encrypt the secret with the keys derived from the KDF.
+    #[getset(get = "pub")]
     encryption_scheme: EncryptionScheme,
 
     /// The encrypted secret data.
@@ -242,6 +247,7 @@ pub struct SecurityQuestionsSealed<
     /// Contains multiple encrypted versions of the same secret, each encrypted
     /// with a different key derived from various combinations of question
     /// answers. This redundancy enables fault-tolerant decryption.
+    #[getset(get = "pub")]
     encryptions: IndexSet<HexBytes>,
 }
 
@@ -266,24 +272,6 @@ impl<
             encryption_scheme,
             encryptions,
         }
-    }
-
-    pub fn security_questions_and_salts(
-        &self,
-    ) -> &SecurityQuestionsAndSalts<QUESTION_COUNT> {
-        &self.security_questions_and_salts
-    }
-
-    pub fn kdf_scheme(&self) -> &SecurityQuestionsKdfScheme {
-        &self.kdf_scheme
-    }
-
-    pub fn encryption_scheme(&self) -> &EncryptionScheme {
-        &self.encryption_scheme
-    }
-
-    pub fn encryptions(&self) -> &IndexSet<HexBytes> {
-        &self.encryptions
     }
 
     /// Encrypts a secret using security questions and their answers with

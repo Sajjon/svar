@@ -95,7 +95,15 @@ use crate::prelude::*;
 /// // Salt is not included in display for security
 /// ```
 #[derive(
-    Serialize, Display, Deserialize, Clone, PartialEq, Eq, Hash, Debug,
+    Serialize,
+    Display,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Debug,
+    getset::Getters,
 )]
 #[display(
     "SecurityQuestionAnswerAndSalt(question: {question}, answer: {answer})"
@@ -105,6 +113,7 @@ pub struct SecurityQuestionAnswerAndSalt {
     ///
     /// Contains all metadata about the question including its ID, version,
     /// category, text, and expected answer format.
+    #[getset(get = "pub")]
     question: SecurityQuestion,
 
     /// The user's answer to the security question.
@@ -113,6 +122,7 @@ pub struct SecurityQuestionAnswerAndSalt {
     /// in combination with the question and salt to derive encryption keys.
     /// Should be stored and retrieved exactly as provided for consistent
     /// key derivation.
+    #[getset(get = "pub")]
     answer: String,
 
     /// Cryptographic salt for key derivation.
@@ -120,6 +130,7 @@ pub struct SecurityQuestionAnswerAndSalt {
     /// A 32-byte random value used to ensure that identical question/answer
     /// pairs produce different encryption keys across different encryptions.
     /// Generated using a cryptographically secure random number generator.
+    #[getset(get = "pub")]
     salt: Exactly32Bytes,
 }
 
@@ -136,18 +147,6 @@ impl SecurityQuestionAnswerAndSalt {
             answer,
             salt,
         }
-    }
-
-    pub fn question(&self) -> &SecurityQuestion {
-        &self.question
-    }
-
-    pub fn answer(&self) -> &str {
-        &self.answer
-    }
-
-    pub fn salt(&self) -> &Exactly32Bytes {
-        &self.salt
     }
 
     pub fn with_answer(self, answer: impl Into<String>) -> Self {
@@ -359,7 +358,7 @@ mod tests {
         )
         .expect("Should have been able to answer freeform question");
         assert_eq!(qa.question(), &question);
-        assert_eq!(qa.answer(), answer);
+        assert_eq!(qa.answer(), &answer);
 
         let second = SecurityQuestionAnswerAndSalt::by_answering_freeform(
             question.clone(),

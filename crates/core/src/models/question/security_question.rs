@@ -86,7 +86,16 @@ use crate::prelude::*;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[derive(
-    Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display,
+    Serialize,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Debug,
+    Display,
+    getset::Getters,
+    getset::CopyGetters,
 )]
 #[display(
     "SecurityQuestion(id: {id}, version: {version}, kind: {kind}, question: {question}, format: {expected_answer_format})"
@@ -97,6 +106,7 @@ pub struct SecurityQuestion {
     /// This ID allows for tracking and referencing specific questions across
     /// different versions and implementations. Questions with the same ID but
     /// different versions represent updates to the same conceptual question.
+    #[getset(get_copy = "pub")]
     id: u16, // FIXME: newtype
 
     /// Version number for this security question.
@@ -104,6 +114,7 @@ pub struct SecurityQuestion {
     /// Allows for evolution of questions over time while maintaining backwards
     /// compatibility. Higher version numbers indicate newer versions of the
     /// same question (identified by the same ID).
+    #[getset(get_copy = "pub")]
     version: u8, // FIXME: newtype
 
     /// The category or type of this security question.
@@ -111,12 +122,14 @@ pub struct SecurityQuestion {
     /// Categorizes questions by their nature (e.g., personal history,
     /// preferences, factual information) to help with question selection
     /// and validation.
+    #[getset(get = "pub")]
     kind: SecurityQuestionKind,
 
     /// The actual question text presented to the user.
     ///
     /// This is the human-readable question that users will see and answer.
     /// Should be clear, unambiguous, and culturally appropriate.
+    #[getset(get = "pub")]
     question: String,
 
     /// Expected format constraints for answers to this question.
@@ -124,6 +137,7 @@ pub struct SecurityQuestion {
     /// Defines how answers should be structured (e.g., single line, date
     /// format, numeric) to ensure consistency in answer collection and
     /// validation.
+    #[getset(get = "pub")]
     expected_answer_format: SecurityQuestionExpectedAnswerFormat,
 }
 
@@ -267,28 +281,6 @@ impl SecurityQuestion {
             .question(question.as_ref())
             .expected_answer_format(expected_answer_format)
             .build()
-    }
-
-    pub fn id(&self) -> u16 {
-        self.id
-    }
-
-    pub fn version(&self) -> u8 {
-        self.version
-    }
-
-    pub fn kind(&self) -> &SecurityQuestionKind {
-        &self.kind
-    }
-
-    pub fn question(&self) -> &str {
-        &self.question
-    }
-
-    pub fn expected_answer_format(
-        &self,
-    ) -> &SecurityQuestionExpectedAnswerFormat {
-        &self.expected_answer_format
     }
 
     /// Creates a freeform security question with the specified ID.

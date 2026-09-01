@@ -34,10 +34,14 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKdfScheme {
 
 /// Version1 of SecurityQuestions KDF, derives encryption keys from security
 /// questions and answers, using two "sub-KDFs".
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(
+    Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, getset::Getters,
+)]
 pub struct SecurityQuestionsKDFSchemeVersion1 {
+    #[getset(get = "pub")]
     entropies_from_questions_answer_and_salt:
         SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8,
+    #[getset(get = "pub")]
     kdf_encryption_keys_from_key_exchange_keys:
         SecurityQuestionsEncryptionKeysByXorEntropies,
 }
@@ -55,18 +59,6 @@ impl SecurityQuestionsKDFSchemeVersion1 {
             entropies_from_questions_answer_and_salt,
             kdf_encryption_keys_from_key_exchange_keys,
         }
-    }
-
-    pub fn entropies_from_questions_answer_and_salt(
-        &self,
-    ) -> &SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
-        &self.entropies_from_questions_answer_and_salt
-    }
-
-    pub fn kdf_encryption_keys_from_key_exchange_keys(
-        &self,
-    ) -> &SecurityQuestionsEncryptionKeysByXorEntropies {
-        &self.kdf_encryption_keys_from_key_exchange_keys
     }
 }
 

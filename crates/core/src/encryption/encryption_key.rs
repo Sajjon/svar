@@ -17,19 +17,19 @@ use crate::prelude::*;
     Serialize,
     Deserialize,
     Hash,
+    getset::Getters,
 )]
 #[serde(transparent)]
-pub struct EncryptionKey(Exactly32Bytes);
+pub struct EncryptionKey {
+    #[getset(get = "pub")]
+    bytes: Exactly32Bytes,
+}
 
 #[bon::bon]
 impl EncryptionKey {
     #[builder]
     pub fn new(bytes: Exactly32Bytes) -> Self {
-        Self(bytes)
-    }
-
-    pub fn bytes(&self) -> &[u8; 32] {
-        self.0.bytes()
+        Self { bytes }
     }
 
     /// Generates a new `EncryptionKey` using a CSPRNG.

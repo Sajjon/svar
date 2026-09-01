@@ -59,14 +59,10 @@ impl OpenArgs {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, getset::Getters)]
 pub struct OpenInput {
+    #[getset(get = "pub")]
     sealed_path: PathBuf,
-}
-impl OpenInput {
-    pub fn sealed_path(&self) -> &PathBuf {
-        &self.sealed_path
-    }
 }
 
 #[derive(Debug, Args, PartialEq)]
@@ -108,17 +104,10 @@ impl SealArgs {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, getset::Getters, getset::CloneGetters)]
 pub struct SealInput {
+    #[getset(get_clone = "pub")]
     secret_path: Option<PathBuf>,
+    #[getset(get = "pub")]
     sealed_path: PathBuf,
-}
-impl SealInput {
-    pub fn secret_path(&self) -> Option<PathBuf> {
-        self.secret_path.clone()
-    }
-
-    pub fn sealed_path(&self) -> &PathBuf {
-        &self.sealed_path
-    }
 }

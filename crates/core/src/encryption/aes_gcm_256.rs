@@ -98,7 +98,7 @@ impl VersionedEncryption for AesGcm256 {
 
 impl From<EncryptionKey> for Key<aes_gcm::Aes256Gcm> {
     fn from(value: EncryptionKey) -> Self {
-        Self::from(*value.bytes())
+        Self::from(*value.bytes().bytes())
     }
 }
 

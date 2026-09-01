@@ -2,15 +2,25 @@ use crate::prelude::*;
 
 /// A specification of expected format for an answer to a security question.
 #[derive(
-    Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Display,
+    Serialize,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Debug,
+    Display,
+    getset::Getters,
 )]
 #[display("{answer_structure}")]
 pub struct SecurityQuestionExpectedAnswerFormat {
     /// E.g. `"<CITY>, <YEAR>"`
+    #[getset(get = "pub")]
     answer_structure: String,
 
     /// An example of a possible answer that matches `answer_structure`.
     /// E.g. `"Berlin, 1976"`
+    #[getset(get = "pub")]
     example_answer: String,
 
     /// If user is about to select the question:
@@ -18,6 +28,7 @@ pub struct SecurityQuestionExpectedAnswerFormat {
     ///
     /// Then we can discourage the user from selecting that question
     /// if the answer is in `["Teddy", "Peter Rabbit", "Winnie (the Poh)"]`
+    #[getset(get = "pub")]
     unsafe_answers: Vec<String>,
 }
 
@@ -40,18 +51,6 @@ impl SecurityQuestionExpectedAnswerFormat {
             example_answer,
             unsafe_answers,
         }
-    }
-
-    pub fn answer_structure(&self) -> &str {
-        &self.answer_structure
-    }
-
-    pub fn example_answer(&self) -> &str {
-        &self.example_answer
-    }
-
-    pub fn unsafe_answers(&self) -> &[String] {
-        &self.unsafe_answers
     }
 
     pub fn name() -> Self {
