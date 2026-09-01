@@ -82,4 +82,16 @@ mod tests {
         assert_ne!(gen0.salt(), gen1.salt());
         assert_eq!(gen0.question(), gen1.question());
     }
+
+    #[test]
+    fn into_parts_preserves_question_and_salt() {
+        let question_and_salt = Sut::sample();
+        let expected_question = question_and_salt.question().clone();
+        let expected_salt = *question_and_salt.salt();
+
+        let (question, salt) = question_and_salt.into_parts();
+
+        assert_eq!(question, expected_question);
+        assert_eq!(salt, expected_salt);
+    }
 }

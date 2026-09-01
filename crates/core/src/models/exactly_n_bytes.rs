@@ -200,6 +200,14 @@ mod tests {
     }
 
     #[test]
+    fn builder_preserves_bytes() {
+        let bytes = [0xAB; 8];
+        let value = Sut::builder().bytes(bytes).build();
+
+        assert_eq!(value.bytes(), &bytes);
+    }
+
+    #[test]
     fn try_from_wrong_length() {
         let result: Result<Sut> = Sut::try_from(vec![1, 2, 3]);
         assert!(result.is_err());

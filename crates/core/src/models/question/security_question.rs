@@ -722,6 +722,25 @@ mod tests {
     }
 
     #[test]
+    fn with_details_preserves_all_details() {
+        let expected_answer_format =
+            SecurityQuestionExpectedAnswerFormat::preset_city_and_year();
+        let question = Sut::with_details(
+            42,
+            7,
+            SecurityQuestionKind::Freeform,
+            "Where did we meet?",
+            expected_answer_format.clone(),
+        );
+
+        assert_eq!(question.id(), 42);
+        assert_eq!(question.version(), 7);
+        assert_eq!(question.kind(), &SecurityQuestionKind::Freeform);
+        assert_eq!(question.question(), "Where did we meet?");
+        assert_eq!(question.expected_answer_format(), &expected_answer_format);
+    }
+
+    #[test]
     fn hash() {
         let mut set = IndexSet::new();
         set.extend(Sut::all());

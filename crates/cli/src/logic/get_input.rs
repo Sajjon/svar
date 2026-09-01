@@ -111,3 +111,46 @@ pub struct SealInput {
     #[getset(get = "pub")]
     sealed_path: PathBuf,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn open_args_with_an_explicit_missing_path_remains_explicit() {
+        let sealed_path = std::env::temp_dir().join(format!(
+            "svar-test-no-sealed-secret-{}.json",
+            std::process::id()
+        ));
+        let args = OpenArgs {
+            sealed_path: Some(sealed_path.clone()),
+        };
+
+        assert_eq!(
+            args.non_existent_path_to_sealed_secret(),
+            Some(sealed_path.clone())
+        );
+
+        let input = args.to_input().expect("explicit paths are valid input");
+        assert_eq!(input.sealed_path(), &sealed_path);
+    }
+
+    #[test]
+    fn seal_args_with_explicit_paths_preserves_them() {
+        let secret_path = std::env::temp_dir()
+            .join(format!("svar-test-secret-{}.txt", std::process::id()));
+        let sealed_path = std::env::temp_dir().join(format!(
+            "svar-test-sealed-secret-{}.json",
+            std::process::id()
+        ));
+        let args = SealArgs {
+            secret_path: Some(secret_path.clone()),
+            sealed_path: Some(sealed_path.clone()),
+        };
+
+        let input = args.to_input().expect("explicit paths are valid input");
+
+        assert_eq!(input.secret_path(), Some(secret_path));
+        assert_eq!(input.sealed_path(), &sealed_path);
+    }
+}

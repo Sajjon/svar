@@ -370,4 +370,27 @@ mod tests {
         assert_eq!(qa.answer(), second.answer());
         assert_ne!(qa.salt(), second.salt());
     }
+
+    #[test]
+    fn with_answer_preserves_question_and_salt() {
+        let original = Sut::sample();
+        let expected_question = original.question().clone();
+        let expected_salt = *original.salt();
+
+        let updated = original.with_answer("A new answer");
+
+        assert_eq!(updated.question(), &expected_question);
+        assert_eq!(updated.answer(), "A new answer");
+        assert_eq!(updated.salt(), &expected_salt);
+    }
+
+    #[test]
+    fn by_answering_freeform_rejects_empty_answers() {
+        let result = Sut::by_answering_freeform(
+            SecurityQuestion::first_concert(),
+            |_, _| String::new(),
+        );
+
+        assert_eq!(result, Err(Error::AnswersToSecurityQuestionsCannotBeEmpty));
+    }
 }

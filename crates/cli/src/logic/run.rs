@@ -190,7 +190,7 @@ fn open_sealed_secret_at(file_path: impl AsRef<Path>) -> Result<()> {
     info!("Opening sealed secret from file: {}", file_path.display());
 
     let sealed_json = fs::read_to_string(file_path).map_err(|e| {
-        Error::FailedToWriteSealedSecretToFile {
+        Error::FailedToReadSecretFromFile {
             file_path: file_path.display().to_string(),
             underlying: e.to_string(),
         }
@@ -289,5 +289,45 @@ pub(crate) fn run(args: CliArgs) {
         Err(e) => {
             error!("Error protecting secret: {}", e);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use super::*;
+
+    fn missing_path(file_name: &str) -> PathBuf {
+        std::env::temp_dir()
+            .join(format!("svar-test-{file_name}-{}", std::process::id()))
+    }
+
+    #[test]
+    fn file_operations_report_missing_secret_files() {
+        let path = missing_path("svar-test-missing-secret.txt");
+
+        assert!(matches!(
+            protect_new_secret(Some(path.clone()), &path),
+            Err(Error::FailedToReadSecretFromFile { .. })
+        ));
+        assert!(matches!(
+            open_sealed_secret_at(&path),
+            Err(Error::FailedToReadSecretFromFile { .. })
+        ));
+    }
+
+    #[test]
+    fn opening_a_nonexistent_explicit_path_is_a_noop() {
+        let path = missing_path("svar-test-no-sealed-secret.json");
+        let args = CliArgs::try_parse_from([
+            "svar",
+            "open",
+            "-i",
+            path.to_str().expect("temporary paths are UTF-8"),
+        ])
+        .expect("valid CLI arguments");
+
+        assert!(seal_or_open(args).is_ok());
     }
 }
