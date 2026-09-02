@@ -197,7 +197,8 @@ pub enum Error {
     /// let key = Exactly32Bytes::generate();
     /// let invalid_ciphertext = vec![1, 2, 3]; // Too short for valid AES data
     ///
-    /// let result = scheme.decrypt(&invalid_ciphertext, EncryptionKey(key));
+    /// let encryption_key = EncryptionKey::builder().bytes(key).build();
+    /// let result = scheme.decrypt(&invalid_ciphertext, encryption_key);
     /// assert!(result.is_err());
     /// ```
     #[error("AES Decryption failed: {underlying}")]
@@ -307,7 +308,8 @@ pub enum Error {
     /// let key = Exactly32Bytes::generate();
     /// let too_short = vec![1, 2]; // Much too short for AES-GCM
     ///
-    /// let result = scheme.decrypt(&too_short, EncryptionKey(key));
+    /// let encryption_key = EncryptionKey::builder().bytes(key).build();
+    /// let result = scheme.decrypt(&too_short, encryption_key);
     /// assert!(result.is_err());
     /// ```
     #[error(

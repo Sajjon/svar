@@ -62,7 +62,7 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
         question_answer_and_salt: &SecurityQuestionAnswerAndSalt,
     ) -> Result<Exactly32Bytes> {
         // Input Key Material: the answer, the most secret.
-        let ikm = self.bytes_from_answer(&question_answer_and_salt.answer)?;
+        let ikm = self.bytes_from_answer(question_answer_and_salt.answer())?;
 
         // We use `question` as info so that two same answers give different
         // output for two different questions, silly example might be:
@@ -70,10 +70,11 @@ impl SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8 {
         // Q2: "Name of first boy/girl you kissed?" A2: "Björn"
         // Here A1 == A2, but we don't want their keys to be the same, so using
         // question as `info` => different keys.
-        let info = self.bytes_from_question(&question_answer_and_salt.question);
+        let info =
+            self.bytes_from_question(question_answer_and_salt.question());
 
         let hkdf = Hkdf::<Sha256>::new(
-            Some(question_answer_and_salt.salt.as_ref()),
+            Some(question_answer_and_salt.salt().as_ref()),
             &ikm,
         );
         let mut okm = [0u8; 32];
@@ -109,21 +110,20 @@ mod tests {
     fn derive_entropies_from_question_answer_and_salt_ignores_white_space() {
         let first = Sut::default()
             .derive_entropies_from_question_answer_and_salt(
-                &SecurityQuestionAnswerAndSalt {
-                    question: SecurityQuestion::first_concert(),
-                    answer: "Jean-Michel Jarre, Paris La Défense, 1990"
-                        .to_owned(),
-                    salt: Exactly32Bytes::sample_aced(),
-                },
+                &SecurityQuestionAnswerAndSalt::builder()
+                    .question(SecurityQuestion::first_concert())
+                    .answer("Jean-Michel Jarre, Paris La Défense, 1990")
+                    .salt(Exactly32Bytes::sample_aced())
+                    .build(),
             )
             .unwrap();
         let second = Sut::default()
             .derive_entropies_from_question_answer_and_salt(
-                &SecurityQuestionAnswerAndSalt {
-                    question: SecurityQuestion::first_concert(),
-                    answer: "Jean-MichelJarre,ParisLaDéfense,1990".to_owned(),
-                    salt: Exactly32Bytes::sample_aced(),
-                },
+                &SecurityQuestionAnswerAndSalt::builder()
+                    .question(SecurityQuestion::first_concert())
+                    .answer("Jean-MichelJarre,ParisLaDéfense,1990")
+                    .salt(Exactly32Bytes::sample_aced())
+                    .build(),
             )
             .unwrap();
 

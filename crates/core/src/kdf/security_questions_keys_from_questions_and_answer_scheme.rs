@@ -34,22 +34,44 @@ impl IsSecurityQuestionsKdfScheme for SecurityQuestionsKdfScheme {
 
 /// Version1 of SecurityQuestions KDF, derives encryption keys from security
 /// questions and answers, using two "sub-KDFs".
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(
+    Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, getset::Getters,
+)]
 pub struct SecurityQuestionsKDFSchemeVersion1 {
-    pub entropies_from_questions_answer_and_salt:
+    #[getset(get = "pub")]
+    entropies_from_questions_answer_and_salt:
         SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8,
-    pub kdf_encryption_keys_from_key_exchange_keys:
+    #[getset(get = "pub")]
+    kdf_encryption_keys_from_key_exchange_keys:
         SecurityQuestionsEncryptionKeysByXorEntropies,
+}
+
+#[bon::bon]
+impl SecurityQuestionsKDFSchemeVersion1 {
+    #[builder]
+    pub fn new(
+        entropies_from_questions_answer_and_salt:
+            SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8,
+        kdf_encryption_keys_from_key_exchange_keys:
+            SecurityQuestionsEncryptionKeysByXorEntropies,
+    ) -> Self {
+        Self {
+            entropies_from_questions_answer_and_salt,
+            kdf_encryption_keys_from_key_exchange_keys,
+        }
+    }
 }
 
 impl Default for SecurityQuestionsKDFSchemeVersion1 {
     fn default() -> Self {
-        Self {
-            entropies_from_questions_answer_and_salt:
+        Self::builder()
+            .entropies_from_questions_answer_and_salt(
                 SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8,
-            kdf_encryption_keys_from_key_exchange_keys:
+            )
+            .kdf_encryption_keys_from_key_exchange_keys(
                 SecurityQuestionsEncryptionKeysByXorEntropies,
-        }
+            )
+            .build()
     }
 }
 
@@ -106,12 +128,12 @@ mod tests {
     fn version1_default() {
         let sut = SutV1::default();
         assert_eq!(
-            sut.entropies_from_questions_answer_and_salt,
-            SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8
+            sut.entropies_from_questions_answer_and_salt(),
+            &SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8
         );
         assert_eq!(
-            sut.kdf_encryption_keys_from_key_exchange_keys,
-            SecurityQuestionsEncryptionKeysByXorEntropies
+            sut.kdf_encryption_keys_from_key_exchange_keys(),
+            &SecurityQuestionsEncryptionKeysByXorEntropies
         );
     }
 
@@ -220,21 +242,20 @@ mod tests {
     }
 
     #[test]
-    fn version1_struct_fields_accessible() {
+    fn version1_accessors() {
         let sut = SutV1::default();
 
-        // Test that we can access the fields
-        let _entropy_kdf = &sut.entropies_from_questions_answer_and_salt;
-        let _encryption_kdf = &sut.kdf_encryption_keys_from_key_exchange_keys;
+        let _entropy_kdf = sut.entropies_from_questions_answer_and_salt();
+        let _encryption_kdf = sut.kdf_encryption_keys_from_key_exchange_keys();
 
         // Verify they are the expected default types
         assert_eq!(
-            sut.entropies_from_questions_answer_and_salt,
-            SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8
+            sut.entropies_from_questions_answer_and_salt(),
+            &SecurityQuestionsKeyExchangeKeysFromQandAsLowerTrimUtf8
         );
         assert_eq!(
-            sut.kdf_encryption_keys_from_key_exchange_keys,
-            SecurityQuestionsEncryptionKeysByXorEntropies
+            sut.kdf_encryption_keys_from_key_exchange_keys(),
+            &SecurityQuestionsEncryptionKeysByXorEntropies
         );
     }
 
@@ -332,7 +353,7 @@ mod tests {
             questions_answers_and_salts
                 .iter()
                 .map(|qas| {
-                    sut.entropies_from_questions_answer_and_salt
+                    sut.entropies_from_questions_answer_and_salt()
                         .derive_entropies_from_question_answer_and_salt(qas)
                 })
                 .collect();

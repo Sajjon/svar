@@ -40,7 +40,10 @@ impl AesGcm256 {
         let nonce = ExactlyNBytes::<NONCE_LEN>::try_from(nonce.as_slice())
             .expect("AesGcm should always use fixed nonce byte count");
 
-        AesGcmSealedBox { nonce, cipher_text }
+        AesGcmSealedBox::builder()
+            .nonce(nonce)
+            .cipher_text(cipher_text)
+            .build()
     }
 
     /// Decrypts the provided sealed box using the given decryption key.
@@ -50,9 +53,9 @@ impl AesGcm256 {
     ) -> Result<Vec<u8>> {
         let decryption_key = decryption_key.into();
         let cipher = aes_gcm::Aes256Gcm::new(&decryption_key);
-        let cipher_text = sealed_box.cipher_text;
+        let (nonce, cipher_text) = sealed_box.into_parts();
         cipher
-            .decrypt(sealed_box.nonce.as_ref().into(), cipher_text.as_ref())
+            .decrypt(nonce.as_ref().into(), cipher_text.as_ref())
             .map_err(|e| Error::AESDecryptionFailed {
                 underlying: e.to_string(),
             })
@@ -95,7 +98,7 @@ impl VersionedEncryption for AesGcm256 {
 
 impl From<EncryptionKey> for Key<aes_gcm::Aes256Gcm> {
     fn from(value: EncryptionKey) -> Self {
-        Self::from(*value.0.bytes())
+        Self::from(*value.bytes().bytes())
     }
 }
 
@@ -110,10 +113,10 @@ mod tests {
     fn test_fail() {
         assert_eq!(
             Sut::open(
-                AesGcmSealedBox {
-                    nonce: Exactly12Bytes::sample(),
-                    cipher_text: hex_decode("deadbeef").unwrap(),
-                },
+                AesGcmSealedBox::builder()
+                    .nonce(Exactly12Bytes::sample())
+                    .cipher_text(hex_decode("deadbeef").unwrap())
+                    .build(),
                 Key::<aes_gcm::Aes256Gcm>::from(
                     *Exactly32Bytes::sample_aced().bytes()
                 )

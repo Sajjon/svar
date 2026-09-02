@@ -27,7 +27,7 @@ impl SecurityQuestionsEncryptionKeysByXorEntropies {
 
         let keys = combinations
             .into_iter()
-            .map(|combination| key_from_combination_by_xor(combination))
+            .map(key_from_combination_by_xor)
             .collect::<IndexSet<EncryptionKey>>();
 
         EncryptionKeys::<QUESTION_COUNT, MIN_CORRECT_ANSWERS>::new(keys)

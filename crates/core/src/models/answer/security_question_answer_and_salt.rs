@@ -31,9 +31,9 @@ use crate::prelude::*;
 ///     },
 /// )?;
 ///
-/// assert_eq!(qa_salt.question, question);
-/// assert!(qa_salt.answer.starts_with("Answer to:"));
-/// assert_eq!(qa_salt.salt.0.len(), 32); // Salt is always 32 bytes
+/// assert_eq!(qa_salt.question(), &question);
+/// assert!(qa_salt.answer().starts_with("Answer to:"));
+/// assert_eq!(qa_salt.salt().bytes().len(), 32); // Salt is always 32 bytes
 ///
 /// # Ok::<(), svar_core::Error>(())
 /// ```
@@ -43,14 +43,14 @@ use crate::prelude::*;
 /// ```
 /// use svar_core::*;
 ///
-/// let qa_salt = SecurityQuestionAnswerAndSalt {
-///     question: SecurityQuestion::sample(),
-///     answer: "My pet's name was Fluffy".to_string(),
-///     salt: Exactly32Bytes::generate(),
-/// };
+/// let qa_salt = SecurityQuestionAnswerAndSalt::builder()
+///     .question(SecurityQuestion::sample())
+///     .answer("My pet's name was Fluffy")
+///     .salt(Exactly32Bytes::generate())
+///     .build();
 ///
-/// println!("Question: {}", qa_salt.question.question);
-/// println!("Answer: {}", qa_salt.answer);
+/// println!("Question: {}", qa_salt.question().question());
+/// println!("Answer: {}", qa_salt.answer());
 /// ```
 ///
 /// ## Using Sample Data
@@ -62,7 +62,7 @@ use crate::prelude::*;
 /// let other_sample = SecurityQuestionAnswerAndSalt::sample_other();
 ///
 /// assert_ne!(sample, other_sample);
-/// assert_ne!(sample.salt, other_sample.salt);
+/// assert_ne!(sample.salt(), other_sample.salt());
 /// ```
 ///
 /// # Serialization
@@ -95,7 +95,15 @@ use crate::prelude::*;
 /// // Salt is not included in display for security
 /// ```
 #[derive(
-    Serialize, Display, Deserialize, Clone, PartialEq, Eq, Hash, Debug,
+    Serialize,
+    Display,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Debug,
+    getset::Getters,
 )]
 #[display(
     "SecurityQuestionAnswerAndSalt(question: {question}, answer: {answer})"
@@ -105,7 +113,8 @@ pub struct SecurityQuestionAnswerAndSalt {
     ///
     /// Contains all metadata about the question including its ID, version,
     /// category, text, and expected answer format.
-    pub question: SecurityQuestion,
+    #[getset(get = "pub")]
+    question: SecurityQuestion,
 
     /// The user's answer to the security question.
     ///
@@ -113,17 +122,41 @@ pub struct SecurityQuestionAnswerAndSalt {
     /// in combination with the question and salt to derive encryption keys.
     /// Should be stored and retrieved exactly as provided for consistent
     /// key derivation.
-    pub answer: String,
+    #[getset(get = "pub")]
+    answer: String,
 
     /// Cryptographic salt for key derivation.
     ///
     /// A 32-byte random value used to ensure that identical question/answer
     /// pairs produce different encryption keys across different encryptions.
     /// Generated using a cryptographically secure random number generator.
-    pub salt: Exactly32Bytes,
+    #[getset(get = "pub")]
+    salt: Exactly32Bytes,
 }
 
+#[bon::bon]
 impl SecurityQuestionAnswerAndSalt {
+    #[builder]
+    pub fn new(
+        question: SecurityQuestion,
+        #[builder(into)] answer: String,
+        salt: Exactly32Bytes,
+    ) -> Self {
+        Self {
+            question,
+            answer,
+            salt,
+        }
+    }
+
+    pub fn with_answer(self, answer: impl Into<String>) -> Self {
+        Self::builder()
+            .question(self.question)
+            .answer(answer)
+            .salt(self.salt)
+            .build()
+    }
+
     /// Creates a new instance by answering a freeform security question.
     ///
     /// This method provides a structured way to create a question-answer-salt
@@ -161,7 +194,7 @@ impl SecurityQuestionAnswerAndSalt {
     ///     },
     /// )?;
     ///
-    /// assert_eq!(qa_salt.answer, "My answer");
+    /// assert_eq!(qa_salt.answer(), "My answer");
     /// # Ok::<(), svar_core::Error>(())
     /// ```
     ///
@@ -175,7 +208,7 @@ impl SecurityQuestionAnswerAndSalt {
     /// let qa_salt = SecurityQuestionAnswerAndSalt::by_answering_freeform(
     ///     question,
     ///     |_question_text, format| {
-    ///         if format.answer_structure.contains("DATE") {
+    ///         if format.answer_structure().contains("DATE") {
     ///             "1990-01-01".to_string()
     ///         } else {
     ///             "My answer".to_string()
@@ -204,21 +237,21 @@ impl SecurityQuestionAnswerAndSalt {
             SecurityQuestionExpectedAnswerFormat,
         ) -> String,
     ) -> Result<Self> {
-        assert_eq!(question.kind, SecurityQuestionKind::Freeform); // unfailable
+        assert_eq!(question.kind(), &SecurityQuestionKind::Freeform); // unfailable
         let answer = provide_answer(
-            question.question.clone(),
-            question.expected_answer_format.clone(),
+            question.question().to_owned(),
+            question.expected_answer_format().clone(),
         );
 
         if answer.is_empty() {
             return Err(Error::AnswersToSecurityQuestionsCannotBeEmpty);
         }
 
-        Ok(Self {
-            question,
-            answer,
-            salt: Exactly32Bytes::generate(),
-        })
+        Ok(Self::builder()
+            .question(question)
+            .answer(answer)
+            .salt(Exactly32Bytes::generate())
+            .build())
     }
 }
 
@@ -242,8 +275,8 @@ impl SecurityQuestionAnswerAndSalt {
     /// let qa_salt = SecurityQuestionAnswerAndSalt::sample();
     /// let question_and_salt = qa_salt.question_and_salt();
     ///
-    /// assert_eq!(question_and_salt.question, qa_salt.question);
-    /// assert_eq!(question_and_salt.salt, qa_salt.salt);
+    /// assert_eq!(question_and_salt.question(), qa_salt.question());
+    /// assert_eq!(question_and_salt.salt(), qa_salt.salt());
     /// // Answer is not included in the result
     /// ```
     ///
@@ -258,11 +291,12 @@ impl SecurityQuestionAnswerAndSalt {
     /// let storable = qa_salt.question_and_salt();
     ///
     /// // Later, when user provides answer again:
-    /// let reconstructed = SecurityQuestionAnswerAndSalt {
-    ///     question: storable.question,
-    ///     answer: "user provided answer".to_string(),
-    ///     salt: storable.salt,
-    /// };
+    /// let (question, salt) = storable.into_parts();
+    /// let reconstructed = SecurityQuestionAnswerAndSalt::builder()
+    ///     .question(question)
+    ///     .answer("user provided answer")
+    ///     .salt(salt)
+    ///     .build();
     /// ```
     ///
     /// # Security Notes
@@ -271,28 +305,28 @@ impl SecurityQuestionAnswerAndSalt {
     /// (question, salt) data, allowing for secure storage patterns where
     /// answers are never persisted.
     pub fn question_and_salt(&self) -> SecurityQuestionAndSalt {
-        SecurityQuestionAndSalt {
-            question: self.question.clone(),
-            salt: self.salt,
-        }
+        SecurityQuestionAndSalt::builder()
+            .question(self.question.clone())
+            .salt(self.salt)
+            .build()
     }
 }
 
 impl HasSampleValues for SecurityQuestionAnswerAndSalt {
     fn sample() -> Self {
-        Self {
-            question: SecurityQuestion::first_concert(),
-            answer: "Jean-Michel Jarre, Paris La Défense, 1990".to_owned(),
-            salt: Exactly32Bytes::sample_aced(),
-        }
+        Self::builder()
+            .question(SecurityQuestion::first_concert())
+            .answer("Jean-Michel Jarre, Paris La Défense, 1990")
+            .salt(Exactly32Bytes::sample_aced())
+            .build()
     }
 
     fn sample_other() -> Self {
-        Self {
-            question: SecurityQuestion::stuffed_animal(),
-            answer: "Oinky piggy pig".to_owned(),
-            salt: Exactly32Bytes::sample_babe(),
-        }
+        Self::builder()
+            .question(SecurityQuestion::stuffed_animal())
+            .answer("Oinky piggy pig")
+            .salt(Exactly32Bytes::sample_babe())
+            .build()
     }
 }
 
@@ -323,8 +357,8 @@ mod tests {
             |_, _| answer.clone(),
         )
         .expect("Should have been able to answer freeform question");
-        assert_eq!(qa.question, question);
-        assert_eq!(qa.answer, answer);
+        assert_eq!(qa.question(), &question);
+        assert_eq!(qa.answer(), &answer);
 
         let second = SecurityQuestionAnswerAndSalt::by_answering_freeform(
             question.clone(),
@@ -332,8 +366,31 @@ mod tests {
         )
         .expect("Should have been able to answer freeform question");
         assert_ne!(qa, second);
-        assert_eq!(qa.question, second.question);
-        assert_eq!(qa.answer, second.answer);
-        assert_ne!(qa.salt, second.salt);
+        assert_eq!(qa.question(), second.question());
+        assert_eq!(qa.answer(), second.answer());
+        assert_ne!(qa.salt(), second.salt());
+    }
+
+    #[test]
+    fn with_answer_preserves_question_and_salt() {
+        let original = Sut::sample();
+        let expected_question = original.question().clone();
+        let expected_salt = *original.salt();
+
+        let updated = original.with_answer("A new answer");
+
+        assert_eq!(updated.question(), &expected_question);
+        assert_eq!(updated.answer(), "A new answer");
+        assert_eq!(updated.salt(), &expected_salt);
+    }
+
+    #[test]
+    fn by_answering_freeform_rejects_empty_answers() {
+        let result = Sut::by_answering_freeform(
+            SecurityQuestion::first_concert(),
+            |_, _| String::new(),
+        );
+
+        assert_eq!(result, Err(Error::AnswersToSecurityQuestionsCannotBeEmpty));
     }
 }

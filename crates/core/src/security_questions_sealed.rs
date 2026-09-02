@@ -207,7 +207,9 @@ pub const DEFAULT_MIN_CORRECT_ANSWERS: usize = 4;
 ///   not in original set
 /// - [`FailedToConvertBytesToSecret`](Error::FailedToConvertBytesToSecret):
 ///   Secret deserialization failed
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
+#[derive(
+    Serialize, Deserialize, Clone, PartialEq, Eq, Debug, getset::Getters,
+)]
 pub struct SecurityQuestionsSealed<
     Secret: IsSecret,
     const QUESTION_COUNT: usize = DEFAULT_QUESTION_COUNT,
@@ -222,35 +224,56 @@ pub struct SecurityQuestionsSealed<
     /// These are stored with the encrypted secret so that during decryption,
     /// the system knows which questions to expect answers for and can use
     /// the same salts that were used during encryption.
-    pub security_questions_and_salts: SecurityQuestionsAndSalts<QUESTION_COUNT>,
+    #[getset(get = "pub")]
+    security_questions_and_salts: SecurityQuestionsAndSalts<QUESTION_COUNT>,
 
     /// The Key Derivation Function (KDF) algorithm configuration.
     ///
     /// This determines how encryption keys are derived from the combination
     /// of security questions, answers, and salts. The scheme is versioned
     /// to allow for future cryptographic upgrades.
-    pub kdf_scheme: SecurityQuestionsKdfScheme,
+    #[getset(get = "pub")]
+    kdf_scheme: SecurityQuestionsKdfScheme,
 
     /// The encryption algorithm configuration.
     ///
     /// This specifies which encryption algorithm (e.g., AES-256-GCM) is used
     /// to encrypt the secret with the keys derived from the KDF.
-    pub encryption_scheme: EncryptionScheme,
+    #[getset(get = "pub")]
+    encryption_scheme: EncryptionScheme,
 
     /// The encrypted secret data.
     ///
     /// Contains multiple encrypted versions of the same secret, each encrypted
     /// with a different key derived from various combinations of question
     /// answers. This redundancy enables fault-tolerant decryption.
-    pub encryptions: IndexSet<HexBytes>,
+    #[getset(get = "pub")]
+    encryptions: IndexSet<HexBytes>,
 }
 
+#[bon::bon]
 impl<
     Secret: IsSecret,
     const QUESTION_COUNT: usize,
     const MIN_CORRECT_ANSWERS: usize,
 > SecurityQuestionsSealed<Secret, QUESTION_COUNT, MIN_CORRECT_ANSWERS>
 {
+    #[builder]
+    pub fn new(
+        security_questions_and_salts: SecurityQuestionsAndSalts<QUESTION_COUNT>,
+        kdf_scheme: SecurityQuestionsKdfScheme,
+        encryption_scheme: EncryptionScheme,
+        encryptions: IndexSet<HexBytes>,
+    ) -> Self {
+        Self {
+            phantom: std::marker::PhantomData,
+            security_questions_and_salts,
+            kdf_scheme,
+            encryption_scheme,
+            encryptions,
+        }
+    }
+
     /// Encrypts a secret using security questions and their answers with
     /// default schemes.
     ///
@@ -285,7 +308,7 @@ impl<
     ///
     /// let sealed =
     ///     SecurityQuestionsSealed::<String, 6, 4>::seal(secret, questions)?;
-    /// assert!(!sealed.encryptions.is_empty());
+    /// assert!(!sealed.encryptions().is_empty());
     /// # Ok::<(), svar_core::Error>(())
     /// ```
     ///
@@ -413,13 +436,12 @@ impl<
 
         // Create the sealed secret with the security questions, encryptions,
         // KDF scheme and encryption scheme
-        let sealed = Self {
-            phantom: std::marker::PhantomData,
-            security_questions_and_salts,
-            encryptions,
-            kdf_scheme,
-            encryption_scheme,
-        };
+        let sealed = Self::builder()
+            .security_questions_and_salts(security_questions_and_salts)
+            .encryptions(encryptions)
+            .kdf_scheme(kdf_scheme)
+            .encryption_scheme(encryption_scheme)
+            .build();
 
         Ok(sealed)
     }
@@ -435,12 +457,12 @@ impl<
             !self
                 .security_questions_and_salts
                 .iter()
-                .any(|saved| saved.question == qa.question)
+                .any(|saved| saved.question() == qa.question())
         });
 
         if let Some(qa) = irrelevant_question {
             return Err(Error::UnrelatedQuestionProvided {
-                question: qa.question.to_string(),
+                question: qa.question().to_string(),
             });
         }
 
@@ -539,7 +561,9 @@ impl<
     /// // Create wrong answers but with same questions
     /// let mut wrong_answers = correct_questions.clone();
     /// for answer_and_salt in wrong_answers.iter_mut() {
-    ///     answer_and_salt.answer = "wrong answer".to_string();
+    ///     *answer_and_salt = answer_and_salt
+    ///         .clone()
+    ///         .with_answer("wrong answer");
     /// }
     ///
     /// match sealed.decrypt(wrong_answers) {
@@ -699,7 +723,7 @@ impl<
 ///
 /// // Create a sample sealed secret
 /// let sample = SecurityQuestionsSealed::<String, 6, 4>::sample();
-/// assert!(!sample.encryptions.is_empty());
+/// assert!(!sample.encryptions().is_empty());
 ///
 /// // Create an alternative sample
 /// let other_sample = SecurityQuestionsSealed::<String, 6, 4>::sample_other();

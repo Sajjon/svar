@@ -23,6 +23,16 @@ pub struct SecurityQuestionsAndSalts<const QUESTION_COUNT: usize>(
     [SecurityQuestionAndSalt; QUESTION_COUNT],
 );
 
+fn question_and_salt(
+    question: SecurityQuestion,
+    salt: Exactly32Bytes,
+) -> SecurityQuestionAndSalt {
+    SecurityQuestionAndSalt::builder()
+        .question(question)
+        .salt(salt)
+        .build()
+}
+
 impl<const QUESTION_COUNT: usize> SecurityQuestionsAndSalts<QUESTION_COUNT> {
     pub fn try_from_iter(
         qas: impl IntoIterator<Item = SecurityQuestionAndSalt>,
@@ -73,64 +83,50 @@ impl<'de, const QUESTION_COUNT: usize> Deserialize<'de>
 impl HasSampleValues for SecurityQuestionsAndSalts<6> {
     fn sample() -> Self {
         type Q = SecurityQuestion;
-        type QS = SecurityQuestionAndSalt;
         Self::try_from_iter([
-            QS {
-                question: Q::failed_exam(),
-                salt: Exactly32Bytes::sample_aced(),
-            },
-            QS {
-                question: Q::parents_met(),
-                salt: Exactly32Bytes::sample_babe(),
-            },
-            QS {
-                question: Q::first_concert(),
-                salt: Exactly32Bytes::sample_cafe(),
-            },
-            QS {
-                question: Q::first_kiss_whom(),
-                salt: Exactly32Bytes::sample_dead(),
-            },
-            QS {
-                question: Q::first_kiss_location(),
-                salt: Exactly32Bytes::sample_ecad(),
-            },
-            QS {
-                question: Q::spouse_met(),
-                salt: Exactly32Bytes::sample_fade(),
-            },
+            question_and_salt(Q::failed_exam(), Exactly32Bytes::sample_aced()),
+            question_and_salt(Q::parents_met(), Exactly32Bytes::sample_babe()),
+            question_and_salt(
+                Q::first_concert(),
+                Exactly32Bytes::sample_cafe(),
+            ),
+            question_and_salt(
+                Q::first_kiss_whom(),
+                Exactly32Bytes::sample_dead(),
+            ),
+            question_and_salt(
+                Q::first_kiss_location(),
+                Exactly32Bytes::sample_ecad(),
+            ),
+            question_and_salt(Q::spouse_met(), Exactly32Bytes::sample_fade()),
         ])
         .expect("Should have been 6 questions and salts")
     }
 
     fn sample_other() -> Self {
         type Q = SecurityQuestion;
-        type QS = SecurityQuestionAndSalt;
         Self::try_from_iter([
-            QS {
-                question: Q::child_middle_name(),
-                salt: Exactly32Bytes::sample_aced(),
-            },
-            QS {
-                question: Q::stuffed_animal(),
-                salt: Exactly32Bytes::sample_babe(),
-            },
-            QS {
-                question: Q::oldest_cousin(),
-                salt: Exactly32Bytes::sample_cafe(),
-            },
-            QS {
-                question: Q::teacher_grade3(),
-                salt: Exactly32Bytes::sample_dead(),
-            },
-            QS {
-                question: Q::applied_uni_no_attend(),
-                salt: Exactly32Bytes::sample_ecad(),
-            },
-            QS {
-                question: Q::first_school(),
-                salt: Exactly32Bytes::sample_fade(),
-            },
+            question_and_salt(
+                Q::child_middle_name(),
+                Exactly32Bytes::sample_aced(),
+            ),
+            question_and_salt(
+                Q::stuffed_animal(),
+                Exactly32Bytes::sample_babe(),
+            ),
+            question_and_salt(
+                Q::oldest_cousin(),
+                Exactly32Bytes::sample_cafe(),
+            ),
+            question_and_salt(
+                Q::teacher_grade3(),
+                Exactly32Bytes::sample_dead(),
+            ),
+            question_and_salt(
+                Q::applied_uni_no_attend(),
+                Exactly32Bytes::sample_ecad(),
+            ),
+            question_and_salt(Q::first_school(), Exactly32Bytes::sample_fade()),
         ])
         .expect("Should have been 6 questions and salts")
     }

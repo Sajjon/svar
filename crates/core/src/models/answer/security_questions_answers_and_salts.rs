@@ -30,11 +30,11 @@ use crate::prelude::*;
 ///     SecurityQuestionsAnswersAndSalts::<3>::try_from_iter([
 ///         SecurityQuestionAnswerAndSalt::sample(),
 ///         SecurityQuestionAnswerAndSalt::sample_other(),
-///         SecurityQuestionAnswerAndSalt {
-///             question: SecurityQuestion::sample(),
-///             answer: "My custom answer".to_string(),
-///             salt: Exactly32Bytes::sample(),
-///         },
+///         SecurityQuestionAnswerAndSalt::builder()
+///             .question(SecurityQuestion::sample())
+///             .answer("My custom answer")
+///             .salt(Exactly32Bytes::sample())
+///             .build(),
 ///     ])?;
 ///
 /// assert_eq!(questions_and_answers.len(), 3);
@@ -64,12 +64,12 @@ use crate::prelude::*;
 ///
 /// // Access via indexing (implements Deref)
 /// let first_qa = &qa_set[0];
-/// println!("Question: {}", first_qa.question.question);
-/// println!("Answer: {}", first_qa.answer);
+/// println!("Question: {}", first_qa.question().question());
+/// println!("Answer: {}", first_qa.answer());
 ///
 /// // Iterate over all questions and answers
 /// for qa in qa_set.iter() {
-///     println!("Q: {} A: {}", qa.question.question, qa.answer);
+///     println!("Q: {} A: {}", qa.question().question(), qa.answer());
 /// }
 /// ```
 ///
@@ -109,6 +109,18 @@ use crate::prelude::*;
 pub struct SecurityQuestionsAnswersAndSalts<const QUESTION_COUNT: usize>(
     [SecurityQuestionAnswerAndSalt; QUESTION_COUNT],
 );
+
+fn answer_and_salt(
+    question: SecurityQuestion,
+    answer: impl Into<String>,
+    salt: Exactly32Bytes,
+) -> SecurityQuestionAnswerAndSalt {
+    SecurityQuestionAnswerAndSalt::builder()
+        .question(question)
+        .answer(answer)
+        .salt(salt)
+        .build()
+}
 
 impl<const QUESTION_COUNT: usize>
     SecurityQuestionsAnswersAndSalts<QUESTION_COUNT>
@@ -239,38 +251,37 @@ impl SecurityQuestionsAnswersAndSalts<6> {
     /// encryption system.
     pub(crate) fn sample_wrong_answers() -> Self {
         type Q = SecurityQuestion;
-        type QA = SecurityQuestionAnswerAndSalt;
         Self::try_from_iter([
-            QA {
-                question: Q::failed_exam(),
-                answer: "Wrong answer".to_owned(),
-                salt: Exactly32Bytes::sample_aced(),
-            },
-            QA {
-                question: Q::parents_met(),
-                answer: "Wrong answer".to_owned(),
-                salt: Exactly32Bytes::sample_babe(),
-            },
-            QA {
-                question: Q::first_concert(),
-                answer: "Wrong answer".to_owned(),
-                salt: Exactly32Bytes::sample_cafe(),
-            },
-            QA {
-                question: Q::first_kiss_whom(),
-                answer: "Wrong answer".to_owned(),
-                salt: Exactly32Bytes::sample_dead(),
-            },
-            QA {
-                question: Q::first_kiss_location(),
-                answer: "Wrong answer".to_owned(),
-                salt: Exactly32Bytes::sample_ecad(),
-            },
-            QA {
-                question: Q::spouse_met(),
-                answer: "Wrong answer".to_owned(),
-                salt: Exactly32Bytes::sample_fade(),
-            },
+            answer_and_salt(
+                Q::failed_exam(),
+                "Wrong answer",
+                Exactly32Bytes::sample_aced(),
+            ),
+            answer_and_salt(
+                Q::parents_met(),
+                "Wrong answer",
+                Exactly32Bytes::sample_babe(),
+            ),
+            answer_and_salt(
+                Q::first_concert(),
+                "Wrong answer",
+                Exactly32Bytes::sample_cafe(),
+            ),
+            answer_and_salt(
+                Q::first_kiss_whom(),
+                "Wrong answer",
+                Exactly32Bytes::sample_dead(),
+            ),
+            answer_and_salt(
+                Q::first_kiss_location(),
+                "Wrong answer",
+                Exactly32Bytes::sample_ecad(),
+            ),
+            answer_and_salt(
+                Q::spouse_met(),
+                "Wrong answer",
+                Exactly32Bytes::sample_fade(),
+            ),
         ])
         .expect("Should have been 6 questions and answers")
     }
@@ -279,76 +290,74 @@ impl SecurityQuestionsAnswersAndSalts<6> {
 impl HasSampleValues for SecurityQuestionsAnswersAndSalts<6> {
     fn sample() -> Self {
         type Q = SecurityQuestion;
-        type QA = SecurityQuestionAnswerAndSalt;
         Self::try_from_iter([
-            QA {
-                question: Q::failed_exam(),
-                answer: "MIT, year 4, Python".to_owned(),
-                salt: Exactly32Bytes::sample_aced(),
-            },
-            QA {
-                question: Q::parents_met(),
-                answer: "London, 1973".to_owned(),
-                salt: Exactly32Bytes::sample_babe(),
-            },
-            QA {
-                question: Q::first_concert(),
-                answer: "Jean-Michel Jarre, Paris La Défense, 1990".to_owned(),
-                salt: Exactly32Bytes::sample_cafe(),
-            },
-            QA {
-                question: Q::first_kiss_whom(),
-                answer: "John Doe".to_owned(),
-                salt: Exactly32Bytes::sample_dead(),
-            },
-            QA {
-                question: Q::first_kiss_location(),
-                answer: "Behind the shed in the oak tree forrest.".to_owned(),
-                salt: Exactly32Bytes::sample_ecad(),
-            },
-            QA {
-                question: Q::spouse_met(),
-                answer: "Tokyo, 1989".to_owned(),
-                salt: Exactly32Bytes::sample_fade(),
-            },
+            answer_and_salt(
+                Q::failed_exam(),
+                "MIT, year 4, Python",
+                Exactly32Bytes::sample_aced(),
+            ),
+            answer_and_salt(
+                Q::parents_met(),
+                "London, 1973",
+                Exactly32Bytes::sample_babe(),
+            ),
+            answer_and_salt(
+                Q::first_concert(),
+                "Jean-Michel Jarre, Paris La Défense, 1990",
+                Exactly32Bytes::sample_cafe(),
+            ),
+            answer_and_salt(
+                Q::first_kiss_whom(),
+                "John Doe",
+                Exactly32Bytes::sample_dead(),
+            ),
+            answer_and_salt(
+                Q::first_kiss_location(),
+                "Behind the shed in the oak tree forrest.",
+                Exactly32Bytes::sample_ecad(),
+            ),
+            answer_and_salt(
+                Q::spouse_met(),
+                "Tokyo, 1989",
+                Exactly32Bytes::sample_fade(),
+            ),
         ])
         .expect("Should have been 6 questions and answers")
     }
 
     fn sample_other() -> Self {
         type Q = SecurityQuestion;
-        type QA = SecurityQuestionAnswerAndSalt;
         Self::try_from_iter([
-            QA {
-                question: Q::child_middle_name(),
-                answer: "Joe".to_owned(),
-                salt: Exactly32Bytes::sample_aced(),
-            },
-            QA {
-                question: Q::stuffed_animal(),
-                answer: "Bobby".to_owned(),
-                salt: Exactly32Bytes::sample_babe(),
-            },
-            QA {
-                question: Q::oldest_cousin(),
-                answer: "Roxanne".to_owned(),
-                salt: Exactly32Bytes::sample_cafe(),
-            },
-            QA {
-                question: Q::teacher_grade3(),
-                answer: "Ali".to_owned(),
-                salt: Exactly32Bytes::sample_dead(),
-            },
-            QA {
-                question: Q::applied_uni_no_attend(),
-                answer: "Oxford".to_owned(),
-                salt: Exactly32Bytes::sample_ecad(),
-            },
-            QA {
-                question: Q::first_school(),
-                answer: "Hogwartz".to_owned(),
-                salt: Exactly32Bytes::sample_fade(),
-            },
+            answer_and_salt(
+                Q::child_middle_name(),
+                "Joe",
+                Exactly32Bytes::sample_aced(),
+            ),
+            answer_and_salt(
+                Q::stuffed_animal(),
+                "Bobby",
+                Exactly32Bytes::sample_babe(),
+            ),
+            answer_and_salt(
+                Q::oldest_cousin(),
+                "Roxanne",
+                Exactly32Bytes::sample_cafe(),
+            ),
+            answer_and_salt(
+                Q::teacher_grade3(),
+                "Ali",
+                Exactly32Bytes::sample_dead(),
+            ),
+            answer_and_salt(
+                Q::applied_uni_no_attend(),
+                "Oxford",
+                Exactly32Bytes::sample_ecad(),
+            ),
+            answer_and_salt(
+                Q::first_school(),
+                "Hogwartz",
+                Exactly32Bytes::sample_fade(),
+            ),
         ])
         .expect("Should have been 6 questions and answers")
     }
@@ -377,7 +386,7 @@ mod tests {
         let wrong = Sut::sample_wrong_answers();
         assert_eq!(wrong.0.len(), 6);
         for qa in &wrong.0 {
-            assert_eq!(qa.answer, "Wrong answer");
+            assert_eq!(qa.answer(), "Wrong answer");
         }
     }
 
